@@ -1,6 +1,7 @@
 package dungeonforge.core;
 
-import java.util.Random;
+
+import dungeonforge.config.RandomSource;
 
 /**
  * WEEK 1 -- a monster.
@@ -12,17 +13,14 @@ import java.util.Random;
  */
 public class Monster extends Entity {
 
-    /** Randomness source #1 of 3. Nobody can seed this. */
-    private static final Random RNG = new Random();
-
     private final String species;
     private final int xpReward;
 
     public Monster(String species, int baseHp, int baseAttack, int xpReward) {
         // A little stat variance so no two monsters are identical.
         super(species,
-              baseHp + RNG.nextInt(5) - 2,
-              baseAttack + RNG.nextInt(3) - 1,
+              baseHp + RandomSource.getInstance().between(-2, 2),
+              baseAttack + RandomSource.getInstance().between(-1, 1),
               0);
         this.species = species;
         this.xpReward = xpReward;

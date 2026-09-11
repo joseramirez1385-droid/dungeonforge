@@ -1,0 +1,10 @@
+dungeonforge\core\Player.class
+dungeonforge\core\Entity.class
+dungeonforge\Main.class
+dungeonforge\config\Json.class
+dungeonforge\config\GameConfig.class
+dungeonforge\core\GameWorld.class
+dungeonforge\config\RandomSource.class
+dungeonforge\core\Monster.class
+dungeonforge\core\DungeonLevel.class
+dungeonforge\core\Room.class
