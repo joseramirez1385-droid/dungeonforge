@@ -51,6 +51,7 @@ public final class GameConfig {
     }
 
     public long getSeed() {
+
         return (long)getDouble("seed");
     }
 
