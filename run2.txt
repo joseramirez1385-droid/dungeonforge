@@ -1,0 +1,37 @@
+=========================================
+        D U N G E O N F O R G E
+  A Head First Design Patterns project
+=========================================
+  version 0.2.0
+
+Delver  HP 60/60  ATK 8  DEF 2  Gold 0  XP 0  Carry 60.0kg
+
+-- Level 1 --
+L1R0: (empty)
+L1R1: Skeleton (16/16 HP, ATK 4)  Skeleton (18/18 HP, ATK 5)
+L1R2: (empty)
+L1R3: (empty)
+L1R4: Bone Priest (18/18 HP, ATK 6)
+L1R5: Crypt Rat (16/16 HP, ATK 6)
+L1R6: Skeleton (16/16 HP, ATK 6)  Crypt Rat (17/17 HP, ATK 4)
+L1R7: Crypt Rat (17/17 HP, ATK 6)
+-- Level 2 --
+L2R0: Bone Priest (19/19 HP, ATK 6)
+L2R1: (empty)
+L2R2: Bone Priest (22/22 HP, ATK 7)
+L2R3: Wight (21/21 HP, ATK 6)
+L2R4: (empty)
+L2R5: Wight (20/20 HP, ATK 7)  Wight (18/18 HP, ATK 5)
+L2R6: (empty)
+L2R7: Crypt Rat (21/21 HP, ATK 7)  Skeleton (19/19 HP, ATK 7)
+-- Level 3 --
+L3R0: Crypt Rat (24/24 HP, ATK 7)  Skeleton (25/25 HP, ATK 7)
+L3R1: Crypt Rat (24/24 HP, ATK 7)
+L3R2: Bone Priest (26/26 HP, ATK 6)
+L3R3: (empty)
+L3R4: Crypt Rat (23/23 HP, ATK 7)
+L3R5: Wight (25/25 HP, ATK 6)  Crypt Rat (23/23 HP, ATK 8)
+L3R6: (empty)
+L3R7: Crypt Rat (25/25 HP, ATK 8)  Bone Priest (22/22 HP, ATK 7)
+
+Total monsters: 23

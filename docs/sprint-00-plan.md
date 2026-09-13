@@ -40,7 +40,7 @@
 | S0.2 | 2 | 2            | about right                                 |
 | S0.3 | 2 | 2            | about right                                 |
 
-**Points completed (my first velocity number):** ____
+**Points completed (my first velocity number):** __10__
 
 ## Sprint Review — one sentence
 All the acceptance criteria in the linked issues now work.
@@ -49,3 +49,7 @@ All the acceptance criteria in the linked issues now work.
 [#18](https://github.com/joseramirez1385-droid/dungeonforge/issues/18)
 
 > What can the project do now that it could not do at the start of the week?
+
+The project can now have different parts of the program get settings from one shared location
+instead of each creating their own configuration.
+
