@@ -1,6 +1,7 @@
 ../../target/
 out/
 build/
+.venv/
 *.class
 *.jar
 !.mvn/wrapper/maven-wrapper.jar
