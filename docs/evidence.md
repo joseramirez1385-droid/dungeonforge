@@ -158,7 +158,6 @@ $ diff after1.txt after3.txt
 **Paste your `mvn test` summary:**
 
 ```Bash
-joser@Red_Phoenix MINGW64 ~/IdeaProjects/dungeonforge (main)
 $ mvn test
 [INFO] Scanning for projects...
 [INFO] 
@@ -171,7 +170,7 @@ $ mvn test
 [INFO] Copying 2 resources from src\main\resources to target\classes
 [INFO] 
 [INFO] --- compiler:3.13.0:compile (default-compile) @ dungeonforge ---
-[INFO] Recompiling the module because of changed source code.
+[INFO] Recompiling the module because of added or removed source files.
 [INFO] Compiling 10 source files with javac [debug release 21] to target\classes
 [INFO] 
 [INFO] --- resources:3.4.0:testResources (default-testResources) @ dungeonforge ---
@@ -179,7 +178,7 @@ $ mvn test
 [INFO] 
 [INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ dungeonforge ---
 [INFO] Recompiling the module because of changed dependency.
-[INFO] Compiling 1 source file with javac [debug release 21] to target\test-classes
+[INFO] Compiling 2 source files with javac [debug release 21] to target\test-classes
 [INFO] 
 [INFO] --- surefire:3.2.5:test (default-test) @ dungeonforge ---
 [INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
@@ -188,7 +187,7 @@ $ mvn test
 [INFO]  T E S T S
 [INFO] -------------------------------------------------------
 [INFO] Running dungeonforge.SingletonTest
-[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.040 s -- in dungeonforge.SingletonTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.038 s -- in dungeonforge.SingletonTest
 [INFO] Running dungeonforge.SkeletonTest
 [INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.002 s -- in dungeonforge.SkeletonTest
 [INFO] 
@@ -199,9 +198,10 @@ $ mvn test
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time:  1.549 s
-[INFO] Finished at: 2026-09-12T17:19:47-07:00
+[INFO] Total time:  1.501 s
+[INFO] Finished at: 2026-09-11T16:52:32-07:00
 [INFO] ------------------------------------------------------------------------
+
 ```
 
 **Paste the URL of the green CI check on your pull request:**
