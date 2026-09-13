@@ -61,15 +61,17 @@ remembering the next time your own sprint doesn't fit.
 ## Calibration — actual vs estimate
 
 | Story | Estimated | Actual hours | High, low, or about right? |
-|---|---|---|---|
-| US-1.1 | 3 | | |
-| US-1.2 | 3 | | |
-| US-1.3 | 2 | | |
+|---|---|--------------|----------------------------|
+| US-1.1 | 3 | 4            | high                       |
+| US-1.2 | 3 | 4            | high                       |
+| US-1.3 | 2 | 3            | high                       |
 
-**Points completed:** ____ · **Sprint 0 velocity for comparison:** ____
+**Points completed:** 8 · **Sprint 0 velocity for comparison:** ____
 
 ## Sprint Review — one sentence
 
 > What can the project do now that it could not do last week?
 
+The project can now have different parts of the program get settings from one shared location 
+instead of each creating their own configuration.
 
