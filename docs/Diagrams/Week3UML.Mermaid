@@ -1,0 +1,196 @@
+classDiagram
+
+    class Main {
+        +VERSION : String
+        -Main()
+        +banner() String
+        +main(args) void
+    }
+
+    class GameConfig {
+        -instance : GameConfig
+        -settings : Map
+        -GameConfig()
+        +getInstance() GameConfig
+        -loadDefaults() void
+        -loadFromClasspath(resourceName) void
+        +getInt(key) int
+        +getDouble(key) double
+        +getSeed() long
+        +resetForTest() void
+    }
+
+    class Json {
+        -s : String
+        -i : int
+        -Json(s)
+        +parseObject(text) Map
+        -ws() void
+        -value() Object
+        -object() Map
+        -array() List
+        -string() String
+        -number() Double
+    }
+
+    class RandomSource {
+        -instance : RandomSource
+        -rng : Random
+        -seed : long
+        -RandomSource()
+        +getInstance() RandomSource
+        +nextInt(bound) int
+        +between(lo, hi) int
+        +nextDouble() double
+        +pick(options) T
+        +getseed() long
+        +reseed(newSeed) void
+        +resetForTest() void
+    }
+
+    class Entity {
+        <<abstract>>
+        #name : String
+        #hp : int
+        #maxHp : int
+        #attackPower : int
+        #defense : int
+        #Entity(name, maxHp, attackPower, defense)
+        +getName() String
+        +getHp() int
+        +getMaxHp() int
+        +getAttackPower() int
+        +getDefense() int
+        +isAlive() boolean
+        +takeDamage(amount) void
+        +heal(amount) void
+        +describe() String
+        +toString() String
+    }
+
+    class Player {
+        -gold : int
+        -xp : int
+        +Player(name)
+        +getGold() int
+        +getXp() int
+        +addGold(g) void
+        +addXp(x) void
+        +carryCapacity() double
+        +describe() String
+    }
+
+    class Monster {
+        -species : String
+        -xpReward : int
+        +Monster(species, baseHp, baseAttack, xpReward)
+        +getSpecies() String
+        +getXpReward() int
+        +describe() String
+    }
+
+    class Room {
+        -FLAVORS : String[]
+        -id : String
+        -flavor : String
+        -monsters : List
+        +Room(id)
+        +getId() String
+        +getFlavor() String
+        +getMonsters() List
+        +addMonster(m) void
+    }
+
+    class DungeonLevel {
+        -depth : int
+        -rooms : List
+        +DungeonLevel(depth)
+        +getDepth() int
+        +getRooms() List
+        +addRoom(r) void
+    }
+
+    class GameWorld {
+        -player : Player
+        -levels : List
+        +GameWorld(player)
+        -generate() void
+        -spawn(depth) Monster
+        +getPlayer() Player
+        +getLevels() List
+        +totalMonsters() int
+    }
+
+    class SingletonTest {
+        +freshSingletons() void
+        +configReturnsTheSameInstanceEveryTime() void
+        +configConstructorIsPrivate() void
+        +aPlayerIsBuiltFromConfiguredValues() void
+        +unknownKeysDoNotCrashTheGame() void
+        +randomSourceReturnsTheSameInstanceEveryTime() void
+        +randomSourceConstructorIsPrivate() void
+        +theSameSeedProducesTheSameSeedSequence() void
+        +theDifferentSeedProducesTheDifferentSeedSequence() void
+        +TheSameSeedProducesTheSameDungeon() void
+        -tenRolls() int[]
+    }
+
+    class SkeletonTest {
+        +versionIsSet() void
+        +bannerNamesTheProject() void
+    }
+
+%% =========================================
+%% Inheritance
+%% =========================================
+
+    Entity <|-- Player : extends
+    Entity <|-- Monster : extends
+
+%% =========================================
+%% Object relationships
+%% =========================================
+
+    GameWorld *-- Player : owns
+    GameWorld *-- DungeonLevel : contains
+    DungeonLevel *-- Room : contains
+    Room *-- Monster : contains
+
+%% =========================================
+%% Configuration dependencies
+%% =========================================
+
+    GameConfig ..> Json : parses config
+    RandomSource ..> GameConfig : reads seed
+
+    Player ..> GameConfig : reads player settings
+    GameWorld ..> GameConfig : reads dungeon settings
+
+%% =========================================
+%% Randomness dependencies
+%% =========================================
+
+    GameWorld ..> RandomSource : generates monsters
+    Room ..> RandomSource : chooses flavor
+    Monster ..> RandomSource : varies stats
+
+%% =========================================
+%% Main dependencies
+%% =========================================
+
+    Main ..> Player : creates
+    Main ..> GameWorld : creates
+    Main ..> DungeonLevel : iterates
+    Main ..> Room : iterates
+    Main ..> Monster : iterates
+
+%% =========================================
+%% Test dependencies
+%% =========================================
+
+    SkeletonTest ..> Main : tests
+
+    SingletonTest ..> GameConfig : tests singleton
+    SingletonTest ..> RandomSource : tests singleton / seed
+    SingletonTest ..> Player : tests construction
+    SingletonTest ..> GameWorld : tests reproducibility
