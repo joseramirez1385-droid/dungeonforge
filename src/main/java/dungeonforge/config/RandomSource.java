@@ -36,7 +36,7 @@ public final class RandomSource {
         return options.length == 0 ? null : options[rng.nextInt(options.length)];
     }
 
-    public long getseed() { return seed; }
+    public long getSeed() { return seed; }
 
     //For dealing with US-1.2 AC #4
     public void reseed(long newSeed) {
