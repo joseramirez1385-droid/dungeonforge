@@ -2,9 +2,7 @@ package dungeonforge.core;
 
 import dungeonforge.config.GameConfig;
 import dungeonforge.config.RandomSource;
-import dungeonforge.factory.MonsterFactory;
-import dungeonforge.factory.ThemeKit;
-import dungeonforge.factory.ThemeRegistry;
+import dungeonforge.factory.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +18,7 @@ public class GameWorld {
 
     private final Player player;
     private MonsterFactory monsterFactory = new MonsterFactory();
+
     private final ThemeRegistry themes = new ThemeRegistry(monsterFactory);
     private final List<DungeonLevel> levels = new ArrayList<>();
 
@@ -40,10 +39,13 @@ public class GameWorld {
             DungeonLevel level = new DungeonLevel(d, theme.themeName());
             for (int r = 0; r < roomsPerLevel; r++) {
                 Room room = new Room("L" + d + "R" + r);
-                room.setFlavor(theme.createRoomFlavor());
-                int count = RandomSource.getInstance().nextInt(maxMonstersPerRoom + 1);
-                for (int m = 0; m < count; m++) {
-                    room.addMonster(theme.createMonster(d));
+                boolean isEntrance = (r == 0);
+                boolean isFinalRoom = (d == dungeonDepth && r == roomsPerLevel - 1);
+
+                if(isEntrance) {
+                    room.setFlavor(theme.createRoomFlavor());
+                } else {
+                    populateFor(theme, isFinalRoom).populate(room, d);
                 }
                 level.addRoom(room);
             }
@@ -51,9 +53,18 @@ public class GameWorld {
         }
     }
 
+    // ONLY place that chooses between populators
+    private RoomPopulator populateFor(ThemeKit theme, boolean isFinalRoom){
+        if(isFinalRoom) return new BossRoomPopulator(theme);
+        if(RandomSource.getInstance().nextDouble() < 0.30) return new TreasureRoomPopulator(theme);
+        return new StandardRoomPopulator(theme);
+    }
+
     public Player getPlayer()             { return player; }
     public List<DungeonLevel> getLevels() { return levels; }
     public MonsterFactory getMonsterFactory() {return monsterFactory;}
+    public ThemeRegistry getThemes() { return themes; }
+
 
     public int totalMonsters() {
         int n = 0;
