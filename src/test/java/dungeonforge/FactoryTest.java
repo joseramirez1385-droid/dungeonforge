@@ -20,8 +20,8 @@ public class FactoryTest {
 
     @BeforeEach
     void setUp() {
-        GameConfig.resetForTest();
-        RandomSource.resetForTest();
+        GameConfig.resetForTests();
+        RandomSource.resetForTests();
         factory = new MonsterFactory();
     }
 
@@ -60,7 +60,7 @@ public class FactoryTest {
     @Test
     void bossesAreExcludedFromTheOrdinarySpawnPool() {
         assertFalse(factory.idsForTheme("crypt").contains("bone_tyrant"));
-        assertEquals("bone_tyrant", factory.bossIdsForTheme("crypt"));
+        assertEquals("bone_tyrant", factory.bossIdFromTheme("crypt"));
     }
 
     // Test for US-2.2
