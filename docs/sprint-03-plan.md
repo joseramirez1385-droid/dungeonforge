@@ -68,13 +68,13 @@ Noticing that is worth more than finishing everything.
 ## Calibration
 
 | Story | Estimated | Actual hours | High, low, about right? |
-|---|---|---|---|
-| US-3.1 | 3 | | |
-| US-3.2 | 2 | | |
-| US-3.3 | 3 | | |
-| US-3.4 | 2 | | |
+|---|---|--------------|-------------------------|
+| US-3.1 | 3 | 5            | high                    |
+| US-3.2 | 2 | 5            | high                    |
+| US-3.3 | 3 | 4            | high                    |
+| US-3.4 | 2 | 3            | high                    |
 
-**Points completed:** ____ · **Running velocity (sprints 0–3):** ____
+**Points completed:** _17___ · **Running velocity (sprints 0–3):** ____
 
 > **This number is your Week 6 budget.** You'll set your own capacity from it.
 
