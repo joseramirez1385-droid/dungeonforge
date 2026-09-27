@@ -8,10 +8,7 @@ import dungeonforge.core.GameWorld;
 import dungeonforge.core.Monster;
 import dungeonforge.core.Player;
 import dungeonforge.core.Room;
-import dungeonforge.events.EventBus;
-import dungeonforge.events.EventType;
-import dungeonforge.events.GameEvent;
-import dungeonforge.events.QuestTracker;
+import dungeonforge.events.*;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -98,12 +95,25 @@ public final class Main {
                 }
             }
             System.out.println();
+            int monstersAtStart = world.totalMonsters();
+            int lootAtStart = world.totalLoot();
+
             System.out.println("=== THE DELVE ===");
+
             EventBus bus = new EventBus();
             QuestTracker quests = new QuestTracker(bus);
             bus.subscribe(quests);
+            AchievementSystem achievement = new AchievementSystem(bus);
+            CombatLog log = new CombatLog(200);
+            bus.subscribe(quests);
+            bus.subscribe(achievement);
+            bus.subscribe(log);
+
+
 
             delve(world, player, bus);
+
+
 
             System.out.println();
             System.out.println("Themes registered: " + world.getThemes().themeNames());
@@ -122,9 +132,10 @@ public final class Main {
             bus.publish(GameEvent.of(EventType.LEVEL_ENTERED,
                     "depth", level.getDepth(), "theme", level.getThemeName()));
             for (Room room : level.getRooms()) {
-                if (!room.getMonsters().isEmpty()) {
-                    System.out.println("    " + room.getId());
-                    if (!combat.fight(player, room, level.getDepth())) return;   // died
+                if (!combat.fight(player, room, level.getDepth())) {
+                    System.out.println("   " + player.describe());
+                    return;
+
                 }
                 Combat.restAfterRoom(player);
             }
