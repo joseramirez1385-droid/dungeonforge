@@ -105,9 +105,12 @@ public final class Main {
             bus.subscribe(quests);
             AchievementSystem achievement = new AchievementSystem(bus);
             CombatLog log = new CombatLog(200);
+            DangerMeter dm = new DangerMeter(bus, player,
+                    (int)Math.round(0.25 * GameConfig.getInstance().getDouble("playerStartingHP")));
             bus.subscribe(quests);
             bus.subscribe(achievement);
             bus.subscribe(log);
+            bus.subscribe(dm);
 
 
 
