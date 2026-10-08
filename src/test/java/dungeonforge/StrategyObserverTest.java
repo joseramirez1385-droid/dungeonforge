@@ -136,7 +136,16 @@ class StrategyObserverTest {
         m.setStrategy(new AggressiveStrategy());
         room.addMonster(m);
 
-        new Combat(bus).fight(new Player("P"), room, 1);
+        // WEEK 7 UPDATE: Combat.fight() is gone. Splitting it into playerStrikes() and
+        // monsterTurns() was the right move -- a human now acts one command at a time -- but
+        // it broke this Week 5 test, which is exactly what should happen. A refactor that
+        // changes an API is supposed to make its callers fail loudly.
+        Combat combat = new Combat(bus);
+        Player p = new Player("P");
+        for (int round = 0; round < 10 && m.isAlive() && p.isAlive(); round++) {
+            combat.playerStrikes(p, m);
+            if (m.isAlive()) combat.monsterTurns(p, room);
+        }
 
         assertTrue(seen.stream().anyMatch(e -> e.getType() == EventType.STRATEGY_CHANGED),
                 "a monster driven below the flee threshold should change tactics");
@@ -256,3 +265,4 @@ class StrategyObserverTest {
                 m.getStrategy().chooseAction(m, new Player("P"), new Room("r")).getType());
     }
 }
+
