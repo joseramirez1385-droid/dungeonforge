@@ -22,6 +22,7 @@ import dungeonforge.events.Quest;
 import dungeonforge.events.QuestTracker;
 import dungeonforge.items.Item;
 import dungeonforge.items.Potion;
+import dungeonforge.commands.CommandHistory;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
@@ -104,9 +105,10 @@ public final class Main {
             bus.subscribe(meter);
             bus.subscribe(new ConsolePrinter());
 
-            GameContext ctx = new GameContext(world, player, bus, new Combat(bus));
-            CommandParser cmds = new CommandParser(quests, achievements);
+            CommandHistory history = new CommandHistory();
 
+            GameContext ctx = new GameContext(world, player, bus, new Combat(bus), history);
+            CommandParser cmds = new CommandParser(quests, achievements);
             gameLoop(cmds, ctx);
 
 
@@ -134,6 +136,7 @@ public final class Main {
 
             Command command = parser.parse(line, ctx);
             command.execute();
+            ctx.getHistory().push(command);
 
         }
 
