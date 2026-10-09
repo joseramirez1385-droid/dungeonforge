@@ -7,6 +7,8 @@ import dungeonforge.core.*;
 import dungeonforge.events.AchievementSystem;
 import dungeonforge.events.EventBus;
 import dungeonforge.events.QuestTracker;
+import dungeonforge.items.Hourglass;
+import dungeonforge.items.Potion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +33,7 @@ class CommandTest {
         QuestTracker quests = new QuestTracker(bus);
         AchievementSystem achievements = new AchievementSystem(bus);
         history = new CommandHistory();
-        ctx = new GameContext(world, player, bus, new Combat(bus), new CommandHistory());
+        ctx = new GameContext(world, player, bus, new Combat(bus), history);
         parser = new CommandParser(quests, achievements);
     }
 
@@ -77,22 +79,6 @@ class CommandTest {
         assertFalse(parser.parse("look", ctx).isUndoable());
         assertFalse(parser.parse("inventory", ctx).isUndoable());
         assertFalse(parser.parse("help", ctx).isUndoable());
-    }
-
-    // ---------- helpers ----------
-
-    private Room findRoomWithLoot() {
-        for (var level : ctx.getWorld().getLevels()) {
-            for (Room r : level.getRooms()) {
-                if (r.getChest() != null && r.getChest().getContents().size() >= 2) return r;
-            }
-        }
-        return null;
-    }
-
-    private void assumeRoom(Room r) {
-        assertNotNull(r,
-                "the seeded world should contain at least one stocked chest");
     }
 
     // ---------- US-5.2: undo ----------
@@ -183,42 +169,136 @@ class CommandTest {
         assertEquals(60, history.replayLog().size());
     }
 
+    // ---------- US-5.3: macro ----------
+
     @Test
-    void recordUndoEvidence() {
-        Room room = ctx.getCurrentRoom();
+    void lootBecomesOneMacroHoldingSeveralCommands() {
+        Room room = findRoomWithLoot();
+        assumeRoom(room);
+        ctx.setCurrentRoom(room);
         room.getMonsters().clear();
 
-        Monster monster = new Monster("Fragile", 5, 1, 20);
-        monster.setStrategy(
-                new dungeonforge.behavior.AggressiveStrategy()
-        );
-        room.getMonsters().add(monster);
-
-        System.out.println(
-                "| Stage | HP | XP | Gold | Monster HP |"
-        );
-        System.out.println(
-                "| --- | --- | --- | --- | --- |"
-        );
-
-        printEvidence("Before attack", monster);
-
-        run("attack");
-        printEvidence("After attack", monster);
-
-        assertTrue(history.undoLast());
-        printEvidence("After undo", monster);
+        Command loot = parser.parse("loot", ctx);
+        assertInstanceOf(MacroCommand.class, loot);
+        assertTrue(((MacroCommand) loot).size() >= 2);
     }
 
-    private void printEvidence(String stage, Monster monster) {
-        System.out.printf(
-                "| %s | %d | %d | %d | %d |%n",
-                stage,
-                player.getHp(),
-                player.getXp(),
-                player.getGold(),
-                monster.getHp()
+    @Test
+    void aMacroPicksUpEverythingAndUndoPutsItAllBack() {
+        Room room = findRoomWithLoot();
+        assumeRoom(room);
+        ctx.setCurrentRoom(room);
+        room.getMonsters().clear();
+
+        int expected = room.getChest().getContents().size()
+                + room.getFloorItems().size();
+
+        run("loot");
+        assertEquals(expected, player.getInventory().size());
+
+        history.undoLast();
+
+        assertEquals(
+                0,
+                player.getInventory().size(),
+                "undoing a macro undoes all of it"
         );
     }
 
+    @Test
+    void lootInAnEmptyRoomIsANullObject() {
+        Room bare = new Room("bare");
+        ctx.setCurrentRoom(bare);
+
+        assertInstanceOf(
+                NoCommand.class,
+                parser.parse("loot", ctx)
+        );
     }
+
+// ---------- US-5.4: the hourglass ----------
+
+    @Test
+    void theHourglassRewindsTheLastTurn() {
+        player.addItem(new Hourglass(2));
+        Room start = ctx.getCurrentRoom();
+
+        run("north");
+        assertNotSame(start, ctx.getCurrentRoom());
+
+        run("use hourglass");
+        assertSame(start, ctx.getCurrentRoom(), "the hourglass should undo the move");
+    }
+
+    @Test
+    void aSpentHourglassRefuses() {
+        player.addItem(new Hourglass(0));
+
+        run("north");
+        Room afterMove = ctx.getCurrentRoom();
+
+        run("use hourglass");
+
+        assertSame(
+                afterMove,
+                ctx.getCurrentRoom(),
+                "a spent hourglass changes nothing"
+        );
+    }
+
+    @Test
+    void usingAPotionHealsAndConsumesIt() {
+        player.setHp(10);
+        player.addItem(new Potion("Test Draught", 0.2, 10, 25));
+
+        run("use draught");
+
+        assertTrue(player.getHp() > 10);
+        assertNull(player.findItem("Test Draught"));
+    }
+
+// ---------- the free capabilities ----------
+
+    @Test
+    void theReplayLogRecordsWhatTheSessionActuallyDid() {
+        run("look");
+        run("north");
+        run("status");
+
+        assertEquals(
+                java.util.List.of("look", "north", "status"),
+                history.replayLog()
+        );
+    }
+
+
+    // ---------- regression ----------
+
+    @Test
+    void earlierWeeksStillHold() {
+        assertEquals(19, ctx.getWorld().getMonsterFactory().blueprintCount(), "Week 4");
+        assertEquals("Crypt", ctx.getWorld().getLevels().get(0).getThemeName(), "Week 4 themes");
+
+        RandomSource.getInstance().reseed(5L);
+        int a = new GameWorld(new Player("A")).totalMonsters();
+        RandomSource.getInstance().reseed(5L);
+        int b = new GameWorld(new Player("B")).totalMonsters();
+        assertEquals(a, b, "Week 3 determinism");
+    }
+
+    // ---------- helpers ----------
+
+    private Room findRoomWithLoot() {
+        for (var level : ctx.getWorld().getLevels()) {
+            for (Room room : level.getRooms()) {
+                if (room.getChest() != null && room.getChest().getContents().size() >= 2) return room;
+                }
+            }
+        return null;
+    }
+
+    private void assumeRoom(Room room) {assertNotNull(room, "the seeded world should " +
+            "contain at least one stocked chest"); }
+
+}
+
