@@ -14,9 +14,9 @@
 This is the first sprint planned against **your measured velocity** rather than a guess.
 
 | Sprint | Committed | Completed |
-|---|---|---|
-| Sprint 0 (Week 2) | 7 | ____ |
-| Sprint 1 (Week 3) | 8 | ____ |
+|---|---|-----------|
+| Sprint 0 (Week 2) | 7 | _6___     |
+| Sprint 1 (Week 3) | 8 | __11__    |
 
 Fill those in from your own calibration tables. If you completed roughly 7–8 points in each
 of the first two sprints, **10 points is an honest commitment** and that is what this sprint
@@ -62,10 +62,10 @@ write your own plans in Week 6, reading the diagram for ordering is the trick to
 ## Calibration
 
 | Story | Estimated | Actual hours | High, low, about right? |
-|---|---|---|---|
-| US-2.1 | 3 | | |
-| US-2.2 | 4 | | |
-| US-2.3 | 3 | | |
+|---|---|--------------|-------------------------|
+| US-2.1 | 3 | 4            | High                    |
+| US-2.2 | 4 | 4            | about right             |
+| US-2.3 | 3 | 3            | about right             |
 
 **Points completed:** ____ · **Running velocity (sprints 0–2):** ____
 
