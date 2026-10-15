@@ -97,14 +97,18 @@ class CommandTest {
     void undoingAnAttackAlsoReversesTheCounterAttack() {
         Room room = ctx.getCurrentRoom();
 
-        Monster monster = new Monster("Test Dummy", 40, 6, 9);
-        monster.setStrategy(
-                new dungeonforge.behavior.AggressiveStrategy()
+        Monster m = new Monster("Test Dummy", 40, 6, 9);
+        m.setStrategy(new dungeonforge.behavior.AggressiveStrategy()
         );
-        room.getMonsters().add(monster);
+        room.getMonsters().add(m);
+
+        int hpAtStart = player.getHp();
+        run("attack"); // Idle: takes the hit, notices you.
+        assertEquals(hpAtStart, player.getHp()); // Pins the first-blow rule.
+        assertEquals("hunting", m.getState().label()); // Monster is now hunting.
 
         int hpBefore = player.getHp();
-        int monsterHpBefore = monster.getHp();
+        int monsterHpBefore = m.getHp();
 
         run("attack");
 
@@ -112,7 +116,7 @@ class CommandTest {
                 player.getHp() < hpBefore,
                 "The monster should have hit back."
         );
-        assertTrue(monster.getHp() < monsterHpBefore);
+        assertTrue(m.getHp() < monsterHpBefore);
 
         assertTrue(history.undoLast());
 
@@ -121,7 +125,7 @@ class CommandTest {
                 player.getHp(),
                 "Undo must reverse the counter-attack too."
         );
-        assertEquals(monsterHpBefore, monster.getHp());
+        assertEquals(monsterHpBefore, m.getHp());
     }
 
     @Test
