@@ -5,14 +5,12 @@ import java.util.List;
 
 /**
  * WEEK 1 -- one level of the dungeon.
- *
- * TODO(week 4, US-2.2): a level has no idea what KIND of place it is. Every level is
- * identical in character. A level should know its theme.
+ * WEEK 4 -- a level now knows what KIND of place it is. It stores the theme's NAME rather
+ * than the kit itself, because a level is a piece of world state, not a factory.
  */
 public class DungeonLevel {
 
     private final int depth;
-
     private final String themeName;
     private final List<Room> rooms = new ArrayList<>();
 
