@@ -59,6 +59,14 @@ public class Monster extends Entity {
         name.onEnter(this);
     }
 
+    /**
+     * Only TurnSnapshot should call this.* Anything else is a transition and belongs above.
+     */
+    public void restoreState(MonsterState previous) {
+        if (previous != null) this.stateName = previous;
+    }
+
+
     /** How close to death, as a fraction. Strategies read this to decide whether to run. */
     public double hpFraction() { return maxHp == 0 ? 0 : (double) hp / maxHp; }
 

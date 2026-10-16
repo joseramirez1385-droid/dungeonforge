@@ -59,14 +59,13 @@ public class Combat {
                         "to", m.getStrategy().name()
                 ));
             }
-            /*
             if (m.getState() != before) {
                 bus.publish(GameEvent.of(EventType.MONSTER_STATE_CHANGED,
                         "name", m.getName(),
                         "from", before.label(),
-                        "to", m.getState().label());
+                        "to", m.getState().label()));
             }
-            */
+            if (!player.isAlive()) break;
         }
 
         if (!player.isAlive()) {
