@@ -19,12 +19,7 @@ import dungeonforge.core.Room;
 import dungeonforge.events.AchievementSystem;
 import dungeonforge.events.EventBus;
 import dungeonforge.events.QuestTracker;
-import dungeonforge.states.DeadState;
-import dungeonforge.states.EnragedState;
-import dungeonforge.states.FleeingState;
-import dungeonforge.states.HuntingState;
-import dungeonforge.states.IdleState;
-import dungeonforge.states.MonsterState;
+import dungeonforge.states.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -66,7 +61,71 @@ class StateTest {
         return m;
     }
 
-    // ---------- US-6.3: monsters have a lifecycle ----------
+    // ---------- US-6.1: the game has modes ----------
+
+    @Test
+    void aQuietRoomMeansExploring() {
+        assertInstanceOf(ExploringState.class, ctx.getState());
+    }
+
+    @Test
+    void aLivingMonsterPutsTheGameIntoCombat() {
+        ctx.getCurrentRoom().getMonsters().add(monster("Skeleton", 20, 3));
+        ctx.syncState();
+        assertInstanceOf(CombatState.class, ctx.getState());
+    }
+
+    @Test
+    void clearingTheRoomReturnsToExploring() {
+        Monster m = monster("Skeleton", 5, 1);
+        ctx.getCurrentRoom().getMonsters().add(m);
+        ctx.syncState();
+        assertInstanceOf(CombatState.class, ctx.getState());
+
+        run("attack");
+        assertFalse(m.isAlive());
+        ctx.syncState();
+        assertInstanceOf(ExploringState.class, ctx.getState());
+    }
+
+    /** Combat does not list movement at all. */
+    @Test
+    void movementIsNotAvailableDuringCombat() {
+        ctx.getCurrentRoom().getMonsters().add(monster("Skeleton", 30, 2));
+        ctx.syncState();
+
+        assertFalse(ctx.allowedVerbs().contains("north"));
+        assertInstanceOf(NoCommand.class, parser.parse("north", ctx));
+    }
+
+    @Test
+    void attackIsNotAvailableWhileExploring() {
+        assertFalse(ctx.allowedVerbs().contains("attack"));
+        assertInstanceOf(NoCommand.class, parser.parse("attack", ctx));
+    }
+
+    /** The rule belongs in the mode, not inside each command. */
+    @Test
+    void commandsNoLongerCarryTheirOwnModeGuards() throws Exception {
+        for (String file : new String[]{"MoveCommand", "TakeCommand", "DropCommand"}) {
+            String source = java.nio.file.Files.readString(
+                    java.nio.file.Path.of("src/main/java/dungeonforge/commands/" + file + ".java"));
+            assertFalse(source.contains("hasLivingMonsters"),
+                    file + " should not check the game mode itself");
+        }
+    }
+
+    @Test
+    void helpShowsOnlyWhatIsLegalRightNow() {
+        int exploringVerbs = ctx.allowedVerbs().size();
+        ctx.getCurrentRoom().getMonsters().add(monster("Skeleton", 30, 2));
+        ctx.syncState();
+
+        assertNotEquals(exploringVerbs, ctx.allowedVerbs().size(),
+                "the legal verb list must change with the mode");
+    }
+
+// ---------- US-6.3: monsters have a lifecycle ----------
 
     @Test
     void aMonsterStartsIdleAndCannotAct() {
@@ -117,7 +176,9 @@ class StateTest {
         assertEquals(EnragedState.DAMAGE_BONUS, new EnragedState().damageMultiplier(), 0.001);
     }
 
-    /** Combat must not enumerate state names any more. */
+    /**
+     * Combat must not enumerate state names any more.
+     */
     @Test
     void combatNoLongerBranchesOnStateNames() throws Exception {
         String source = java.nio.file.Files.readString(

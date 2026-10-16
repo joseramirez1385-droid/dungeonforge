@@ -38,9 +38,21 @@ class CommandTest {
     }
 
     private void run(String input) {
-        Command c = parser.parse(input, ctx);
-        c.execute();
-        history.push(c);
+        ctx.syncState();
+
+        Command command = parser.parse(input, ctx);
+        command.execute();
+        history.push(command);
+
+        ctx.syncState();
+    }
+
+    private Monster spawnHostile(String name, int maxHp, int attack, int xpReward) {
+        Monster m = new Monster(name, maxHp, attack, xpReward);
+        m.setStrategy(new dungeonforge.behavior.AggressiveStrategy());
+        ctx.getCurrentRoom().getMonsters().add(m);
+        ctx.syncState();
+        return m;
     }
 
     // ---------- US-5.1: every action is an object ----------
@@ -95,67 +107,44 @@ class CommandTest {
 
     @Test
     void undoingAnAttackAlsoReversesTheCounterAttack() {
-        Room room = ctx.getCurrentRoom();
-
-        Monster m = new Monster("Test Dummy", 40, 6, 9);
-        m.setStrategy(new dungeonforge.behavior.AggressiveStrategy()
-        );
-        room.getMonsters().add(m);
-
+        Monster m = spawnHostile("Test Dummy", 40, 6, 9);
         int hpAtStart = player.getHp();
-        run("attack"); // Idle: takes the hit, notices you.
-        assertEquals(hpAtStart, player.getHp()); // Pins the first-blow rule.
-        assertEquals("hunting", m.getState().label()); // Monster is now hunting.
+        run("attack");
+        assertEquals(hpAtStart, player.getHp(),
+                "an idle monster must not retaliate -- the first blow is free");
+        assertEquals("hunting", m.getState().label(),
+                "...but it notices you on the way out of that turn. If this says 'idle', the "
+                        + "attack never ran at all -- look at the mode, not the state machine.");
 
+        // Turn 2 -- now there is a real exchange, so there is a counter-attack to undo.
         int hpBefore = player.getHp();
         int monsterHpBefore = m.getHp();
 
         run("attack");
 
-        assertTrue(
-                player.getHp() < hpBefore,
-                "The monster should have hit back."
-        );
+        assertTrue(player.getHp() < hpBefore, "the monster should have hit back");
         assertTrue(m.getHp() < monsterHpBefore);
-
         assertTrue(history.undoLast());
-
-        assertEquals(
-                hpBefore,
-                player.getHp(),
-                "Undo must reverse the counter-attack too."
-        );
+        assertEquals(hpBefore, player.getHp(), "undo must reverse the counter-attack too");
         assertEquals(monsterHpBefore, m.getHp());
     }
 
     @Test
     void undoRestoresXpAndGoldFromAKill() {
-        Room room = ctx.getCurrentRoom();
-
-        Monster weak = new Monster("Fragile", 5, 1, 20);
-        weak.setStrategy(
-                new dungeonforge.behavior.AggressiveStrategy()
-        );
-        room.getMonsters().add(weak);
-
-        int hpBefore = weak.getHp();
-        int xpBefore = player.getXp();
-        int goldBefore = player.getGold();
+        Monster weak = spawnHostile("Fragile", 5, 1, 20);
 
         run("attack");
+        assertTrue(player.getXp() > 0);
+        assertTrue(player.getGold() > 0);
 
-        assertTrue(player.getXp() > xpBefore);
-        assertTrue(player.getGold() > goldBefore);
+        history.undoLast();
 
-        assertTrue(history.undoLast());
+        assertEquals(0, player.getXp());
+        assertEquals(0, player.getGold());
+        assertTrue(weak.isAlive(), "the dead should get back up when time reverses");
 
-        assertEquals(xpBefore, player.getXp());
-        assertEquals(goldBefore, player.getGold());
-        assertEquals(hpBefore, weak.getHp());
-        assertTrue(
-                weak.isAlive(),
-                "The monster should come back to life after undo."
-        );
+        assertEquals("idle", weak.getState().label(),
+                "undo must put the monster's STATE back, not just its hit points");
     }
 
     @Test

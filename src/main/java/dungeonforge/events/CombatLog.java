@@ -37,6 +37,7 @@ public class CombatLog implements GameEventListener {
             case MONSTER_HEALED   -> e.getString("healer") + " mends " + e.getString("target") + ".";
             case STRATEGY_CHANGED -> e.getString("name") + " changes tactics: "
                                      + e.getString("from") + " -> " + e.getString("to") + ".";
+            case MONSTER_STATE_CHANGED -> e.getString("name") + " is now " + e.getString("to") + ".";
             case ROOM_CLEARED     -> "Room " + e.getString("room") + " is quiet.";
             case LEVEL_ENTERED    -> "== Level " + e.getInt("depth") + ": " + e.getString("theme") + " ==";
             case PLAYER_DIED      -> "You die in the dark.";
