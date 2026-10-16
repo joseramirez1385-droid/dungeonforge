@@ -120,6 +120,8 @@ holds one and delegates to it.
 **Without looking ahead, guess:** what could possibly distinguish them? You are not expected
 to be right. You're expected to have a hypothesis on record before Week 8 tells you.
 
+My guess is that Strategy controls how a monster performs an action, such as attacking or healing, 
+while State controls what the monster can do based on its current condition.
 
 **And anything else that's still unclear:**
 

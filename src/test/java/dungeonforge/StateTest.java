@@ -157,6 +157,8 @@ class StateTest {
         assertFalse(ctx.allowedVerbs().contains("north"));
     }
 
+
+
 // ---------- US-6.3: monsters have a lifecycle ----------
 
     @Test
@@ -241,5 +243,52 @@ class StateTest {
         int b = new GameWorld(new Player("B")).totalMonsters();
 
         assertEquals(a, b, "Week 3 determinism");
+    }
+
+    // ---------- US-6.4: State and Strategy are different things ----------
+
+    @Test
+    void aMonsterHasBothAStateAndAStrategy() {
+        Monster m = monster("Bone Priest", 20, 3);
+        m.setStrategy(new HealerStrategy());
+
+        assertNotNull(m.getState());
+        assertNotNull(m.getStrategy());
+        assertEquals("healer", m.getStrategy().name());
+        assertEquals("idle", m.getState().label());
+    }
+
+    /** A STATE transition can change the STRATEGY. */
+    @Test
+    void enteringRageMakesEvenAHealerAggressive() {
+        Monster priest = monster("Bone Priest", 20, 3);
+        priest.setStrategy(new HealerStrategy());
+        assertEquals("healer", priest.getStrategy().name());
+
+        priest.setState(new EnragedState());
+
+        assertEquals("aggressive", priest.getStrategy().name(),
+                "EnragedState.onEnter should swap the strategy " + "-- state decides WHEN, strategy is WHAT");
+    }
+
+    @Test
+    void fleeingSwapsTheStrategyToSkittish() {
+        Monster m = monster("Slag Hound", 20, 3);
+        m.setState(new FleeingState());
+        assertInstanceOf(SkittishStrategy.class, m.getStrategy());
+    }
+
+    /** The arrow only points one way. A strategy never sets a state. */
+    @Test
+    void changingStrategyDoesNotChangeState() {
+        Monster m = monster("Skeleton", 20, 3);
+        m.setState(new HuntingState());
+
+        CombatStrategy before = m.getStrategy();
+        m.setStrategy(new SkittishStrategy());
+
+        assertInstanceOf(HuntingState.class, m.getState(),
+                "swapping tactics must not move the monster through its lifecycle");
+        assertNotSame(before, m.getStrategy());
     }
 }
