@@ -73,6 +73,11 @@ public class GameContext {
     public void stop()                   { this.running = false; }
     public GameState getState()          { return state; }
 
+    public void openPack() { transitionTo(new InventoryState()); }
+    public void closePack() { transitionTo(new ExploringState());
+        syncState();
+    }
+
     /** After a turn-ending command, the monsters get their round. */
     public void runMonsterTurns() {
         if (player.isAlive()) combat.monsterTurns(player, currentRoom);
