@@ -1,0 +1,651 @@
+classDiagram
+    direction TB
+
+    namespace dungeonforge {
+        class Main {
+            +VERSION : String
+            -Main()
+            +banner() String
+            +main(StringArray) void
+            -gameLoop(CommandParser, GameContext, CommandHistory) void
+        }
+    }
+
+    namespace dungeonforge_behavior {
+        class Action {
+            -type : Type
+            -target : Entity
+            -flavor : String
+            +Action(Type, Entity, String)
+            +wait(String) Action
+            +getType() Type
+            +getTarget() Entity
+            +getFlavor() String
+        }
+        class AggressiveStrategy {
+            +chooseAction(Monster, Player, Room) Action
+        }
+        class CombatStrategy {
+            <<interface>>
+        }
+        class HealerStrategy {
+            +chooseAction(Monster, Player, Room) Action
+        }
+        class RangedStrategy {
+            +chooseAction(Monster, Player, Room) Action
+        }
+        class SkittishStrategy {
+            +chooseAction(Monster, Player, Room) Action
+        }
+    }
+
+    namespace dungeonforge_commands {
+        class AbstractCommand {
+            <<abstract>>
+            #ctx : GameContext
+            #args : String
+            -before : TurnSnapshot
+            -actuallyRan : boolean
+            #AbstractCommand(GameContext, String)
+            #player() Player
+            #room() Room
+            #bus() EventBus
+            +execute() void
+            #doExecute() boolean
+            +undo() void
+            +isUndoable() boolean
+            +didRun() boolean
+        }
+        class AttackCommand {
+            +AttackCommand(GameContext, String)
+            #doExecute() boolean
+            -findTarget() Monster
+        }
+        class Command {
+            <<interface>>
+        }
+        class CommandFactory {
+            <<interface>>
+        }
+        class CommandHistory {
+            -maxDepth : int
+            +CommandHistory()
+            +push(Command) void
+            +undoLast() boolean
+            +depth() int
+            +replayLog() ListList
+            +clear() void
+        }
+        class CommandParser {
+            -quests : QuestTracker
+            -achievements : AchievementSystem
+            +CommandParser(QuestTracker, AchievementSystem)
+            +register(String, CommandFactory) void
+            +alias(String, String) void
+            +verbs() ListList
+            +parse(String, GameContext) Command
+            -registerDefaults() void
+            -makeLootMacro(GameContext) Command
+            -describeRoom(GameContext) String
+        }
+        class DropCommand {
+            +DropCommand(GameContext, String)
+            #doExecute() boolean
+        }
+        class GameContext {
+            -world : GameWorld
+            -player : Player
+            -bus : EventBus
+            -combat : Combat
+            -history : CommandHistory
+            -currentRoom : Room
+            -running : boolean
+            +transitionTo(GameState) void
+            +syncState() void
+            +allowedVerbs() ListList
+            +getWorld() GameWorld
+            +getPlayer() Player
+            +getBus() EventBus
+            +getCombat() Combat
+            +getHistory() CommandHistory
+            +getCurrentRoom() Room
+        }
+        class MacroCommand {
+            -description : String
+            +MacroCommand(String, ListList)
+            +execute() void
+            +undo() void
+            +size() int
+        }
+        class MoveCommand {
+            -direction : String
+            +MoveCommand(GameContext, String)
+            #doExecute() boolean
+        }
+        class NoCommand {
+            -bus : EventBus
+            -reason : String
+            +NoCommand(EventBus, String)
+            +execute() void
+        }
+        class SimpleCommand {
+            -description : String
+            -body : Body
+            +SimpleCommand(String, Body)
+        }
+        class TakeCommand {
+            +TakeCommand(GameContext, String)
+            #doExecute() boolean
+            -takeFromFloor() Item
+            -takeFromChest() Item
+            -matches(Item) boolean
+        }
+        class TurnSnapshot {
+            -player : Player
+            -room : Room
+            -hp : int
+            -inventory : ListList
+            -monsters : ListList
+            -floorItems : ListList
+            -chestContents : ListList
+            -TurnSnapshot(Player, Room)
+            +capture(Player, Room) TurnSnapshot
+            +restore() void
+            +getRoom() Room
+        }
+        class UseItemCommand {
+            -rewound : boolean
+            +UseItemCommand(GameContext, String)
+            #doExecute() boolean
+        }
+    }
+
+    namespace dungeonforge_config {
+        class GameConfig {
+            -instance : GameConfig
+            -GameConfig()
+            +getInstance() GameConfig
+            -loadDefaults() void
+            -loadFromClasspath(String) void
+            +readResource(String) String
+            +getInt(String) int
+            +getDouble(String) double
+            +getSeed() long
+            +resetForTests() void
+        }
+        class Json {
+            -s : String
+            -i : int
+            -Json(String)
+            +parseObject(String) MapList
+            -ws() void
+            -value() Object
+        }
+        class RandomSource {
+            -instance : RandomSource
+            -rng : Random
+            -seed : long
+            -RandomSource()
+            +getInstance() RandomSource
+            +nextInt(int) int
+            +between(int, int) int
+            +nextDouble() double
+            +getSeed() long
+            +reseed(long) void
+            +resetForTests() void
+        }
+    }
+
+    namespace dungeonforge_core {
+        class Combat {
+            -bus : EventBus
+            +Combat(EventBus)
+            +monsterTurns(Player, Room) void
+            -monsterActs(Monster, Player, Room) void
+            -damageFrom(Monster) int
+            +playerStrikes(Player, Monster) void
+            +firstLivingIn(Room) Monster
+            -hasLiving(Room) boolean
+            -firstLiving(Room) Monster
+            -livingMonsters(Room) ListList
+            +restAfterRoom(Player) void
+        }
+        class DungeonLevel {
+            -depth : int
+            -themeName : String
+            +DungeonLevel(int, String)
+            +getDepth() int
+            +getThemeName() String
+            +getRooms() ListList
+            +addRoom(Room) void
+        }
+        class Entity {
+            <<abstract>>
+            #name : String
+            #hp : int
+            #maxHp : int
+            #attackPower : int
+            #defense : int
+            #Entity(String, int, int, int)
+            +getName() String
+            +getHp() int
+            +getMaxHp() int
+            +getAttackPower() int
+            +getDefense() int
+            +isAlive() boolean
+            +setHp(int) void
+            +takeDamage(int) void
+            +heal(int) void
+            +describe() String
+        }
+        class GameWorld {
+            -player : Player
+            +GameWorld(Player)
+            -generate() void
+            -linkRooms() void
+            +startingRoom() Room
+            +levelContaining(Room) DungeonLevel
+            -populatorFor(ThemeKit, boolean) RoomPopulator
+            +getPlayer() Player
+            +getLevels() ListList
+            +getMonsterFactory() MonsterFactory
+            +getThemes() ThemeRegistry
+            +totalMonsters() int
+            +totalLoot() int
+        }
+        class Monster {
+            -species : String
+            -xpReward : int
+            -strategy : CombatStrategy
+            +Monster(String, int, int, int)
+            +getSpecies() String
+            +getXpReward() int
+            +getStrategy() CombatStrategy
+            +setStrategy(CombatStrategy) void
+            +getState() MonsterState
+            +setState(MonsterState) void
+            +restoreState(MonsterState) void
+            +hpFraction() double
+            +describe() String
+        }
+        class Player {
+            -gold : int
+            -xp : int
+            +Player(String)
+            +getInventory() ListList
+            +addItem(Item) void
+            +removeItem(Item) boolean
+            +findItem(String) Item
+            +setGold(int) void
+            +setXp(int) void
+            +getGold() int
+            +getXp() int
+            +addGold(int) void
+            +addXp(int) void
+            +carryCapacity() double
+            +describe() String
+        }
+        class Room {
+            -id : String
+            -flavor : String
+            -chest : Chest
+            +Room(String)
+            +getId() String
+            +getFlavor() String
+            +setFlavor(String) void
+            +getMonsters() ListList
+            +addMonster(Monster) void
+            +getFloorItems() ListList
+            +addItem(Item) void
+            +getChest() Chest
+            +setChest(Chest) void
+            +hasChest() boolean
+            +getExits() MapList
+            +getExit(String) Room
+        }
+    }
+
+    namespace dungeonforge_events {
+        class AchievementSystem {
+            -bus : EventBus
+            -kills : int
+            -fled : int
+            -deepestLevel : int
+            +AchievementSystem(EventBus)
+            +onEvent(GameEvent) void
+            -unlock(String, String) void
+            +getUnlocked() SetList
+        }
+        class CombatLog {
+            -maxLines : int
+            +CombatLog(int)
+            +onEvent(GameEvent) void
+            -format(GameEvent) String
+            +getLines() ListList
+            +clear() void
+            +size() int
+        }
+        class DangerMeter {
+            -bus : EventBus
+            -player : Player
+            -damageThreshold : int
+            +DangerMeter(EventBus, Player, int)
+            +onEvent(GameEvent) void
+        }
+        class EventBus {
+            +subscribe(GameEventListener) void
+            +unsubscribe(GameEventListener) void
+            +publish(GameEvent) void
+            +message(String) void
+            +listenerCount() int
+        }
+        class EventType {
+            <<enumeration>>
+        }
+        class GameEvent {
+            -type : EventType
+            -GameEvent(EventType)
+            +of(EventType, Object...) GameEvent
+            +message(String) GameEvent
+            +getType() EventType
+            +get(String) Object
+            +getString(String) String
+            +getInt(String) int
+        }
+        class GameEventListener {
+            <<interface>>
+        }
+        class Quest {
+            -id : String
+            -description : String
+            -trigger : EventType
+            -required : int
+            -progress : int
+            +Quest(String, String, EventType, int)
+            +getId() String
+            +getDescription() String
+            +getTrigger() EventType
+            +getRequired() int
+            +getProgress() int
+            +isComplete() boolean
+            +advance() boolean
+            +toString() String
+        }
+        class QuestTracker {
+            -bus : EventBus
+            +QuestTracker(EventBus)
+            +onEvent(GameEvent) void
+            +getQuests() ListList
+            +completedCount() int
+        }
+    }
+
+    namespace dungeonforge_factory {
+        class BossRoomPopulator {
+            +BossRoomPopulator(ThemeKit)
+            #createEncounter(int) ListList
+            #createChest(int) Chest
+        }
+        class CryptThemeKit {
+            -factory : MonsterFactory
+            -FLAVORS : StringArray
+            +CryptThemeKit(MonsterFactory)
+            +createMonster(int) Monster
+            +createBoss(int) Monster
+            +createLoot(int) Item
+            +createRoomFlavor() String
+        }
+        class ForgeThemeKit {
+            -factory : MonsterFactory
+            -FLAVORS : StringArray
+            +ForgeThemeKit(MonsterFactory)
+            +createMonster(int) Monster
+            +createBoss(int) Monster
+            +createLoot(int) Item
+            +createRoomFlavor() String
+        }
+        class FrostThemeKit {
+            -factory : MonsterFactory
+            -FLAVORS : StringArray
+            +FrostThemeKit(MonsterFactory)
+            +createMonster(int) Monster
+            +createBoss(int) Monster
+            +createLoot(int) Item
+            +createRoomFlavor() String
+        }
+        class MonsterDef {
+            +id : String
+            +name : String
+            +hp : int
+            +attack : int
+            +xp : int
+            +theme : String
+            +boss : boolean
+            +strategy : String
+            +MonsterDef(String, String, int, int, int, String)
+            +toString() String
+        }
+        class MonsterFactory {
+            +MonsterFactory()
+            -loadFrom(String) void
+            +register(MonsterDef) void
+            +create(String, int) Monster
+            +idsForTheme(String) ListList
+            +bossIdForTheme(String) String
+            +has(String) boolean
+            +blueprintCount() int
+            +strategyFor(String) CombatStrategy
+            -str(Object, String) String
+            -num(Object, int) int
+        }
+        class RoomPopulator {
+            <<abstract>>
+            #theme : ThemeKit
+            #RoomPopulator(ThemeKit)
+            +populate(Room, int) void
+            #createEncounter(int) ListList
+            #createChest(int) Chest
+            +kind() String
+        }
+        class StandardRoomPopulator {
+            +StandardRoomPopulator(ThemeKit)
+            #createEncounter(int) ListList
+        }
+        class ThemeKit {
+            <<interface>>
+        }
+        class ThemeRegistry {
+            +ThemeRegistry(MonsterFactory)
+            +forDepth(int) ThemeKit
+            +size() int
+            +themeNames() ListList
+        }
+        class TreasureRoomPopulator {
+            +TreasureRoomPopulator(ThemeKit)
+            #createEncounter(int) ListList
+            #createChest(int) Chest
+        }
+        class WinterfellThemeKit {
+            -factory : MonsterFactory
+            -FLAVORS : StringArray
+            +WinterfellThemeKit(MonsterFactory)
+            +themeName() String
+            +createMonster(int) Monster
+            +createBoss(int) Monster
+            +createLoot(int) Item
+            +createRoomFlavor() String
+        }
+    }
+
+    namespace dungeonforge_items {
+        class Armor {
+            -name : String
+            -weight : double
+            -value : int
+            -defense : int
+            +Armor(String, double, int, int)
+            +getDefense() int
+            +describe() String
+        }
+        class Chest {
+            -name : String
+            +Chest(String)
+            +getName() String
+            +getContents() ListList
+            +add(Item) void
+            +isEmpty() boolean
+            +totalValue() int
+        }
+        class Hourglass {
+            -charges : int
+            +Hourglass(int)
+            +hasCharges() boolean
+            +getCharges() int
+            +spendCharge() void
+            +describe() String
+        }
+        class Item {
+            <<interface>>
+        }
+        class Potion {
+            -name : String
+            -weight : double
+            -value : int
+            -healAmount : int
+            +Potion(String, double, int, int)
+            +getHealAmount() int
+            +describe() String
+        }
+        class Treasure {
+            -name : String
+            -weight : double
+            -value : int
+            +Treasure(String, double, int)
+        }
+        class Weapon {
+            -name : String
+            -weight : double
+            -value : int
+            -damage : int
+            +Weapon(String, double, int, int)
+            +getDamage() int
+            +describe() String
+        }
+    }
+
+    namespace dungeonforge_states {
+        class CombatState {
+            +onEnter(GameContext) void
+            +availableCommands() ListList
+            +name() String
+        }
+        class DeadState {
+            +canAct() boolean
+            +next(Monster, Player) MonsterState
+            +label() String
+        }
+        class EnragedState {
+            +DAMAGE_BONUS : double
+            +onEnter(Monster) void
+            +canAct() boolean
+            +damageMultiplier() double
+            +next(Monster, Player) MonsterState
+            +label() String
+        }
+        class ExploringState {
+            +availableCommands() ListList
+            +name() String
+        }
+        class FleeingState {
+            +DAMAGE_DEFICIT : double
+            +onEnter(Monster) void
+            +canAct() boolean
+            +damageMultiplier() double
+            +next(Monster, Player) MonsterState
+            +label() String
+        }
+        class GameOverState {
+            +onEnter(GameContext) void
+            +availableCommands() ListList
+            +name() String
+        }
+        class GameState {
+            <<interface>>
+        }
+        class HuntingState {
+            +canAct() boolean
+            +next(Monster, Player) MonsterState
+            +label() String
+        }
+        class IdleState {
+            +canAct() boolean
+            +next(Monster, Player) MonsterState
+            +label() String
+        }
+        class InventoryState {
+            +onEnter(GameContext) void
+            +availableCommands() ListList
+            +name() String
+        }
+        class MonsterState {
+            <<interface>>
+        }
+    }
+
+    AbstractCommand ..> TurnSnapshot : captures
+    AbstractCommand <|-- AttackCommand
+    AbstractCommand <|-- DropCommand
+    AbstractCommand <|-- MoveCommand
+    AbstractCommand <|-- TakeCommand
+    AbstractCommand <|-- UseItemCommand
+    CombatStrategy <|.. AggressiveStrategy
+    CombatStrategy <|.. HealerStrategy
+    CombatStrategy <|.. RangedStrategy
+    CombatStrategy <|.. SkittishStrategy
+    Command <|.. AbstractCommand
+    Command <|.. MacroCommand
+    Command <|.. NoCommand
+    Command <|.. SimpleCommand
+    CommandHistory o-- Command : undo stack
+    CommandParser o-- CommandFactory : registry
+    DungeonLevel o-- Room : rooms
+    EnragedState ..> AggressiveStrategy : onEnter sets
+    Entity <|-- Monster
+    Entity <|-- Player
+    EventBus o-- GameEventListener : subscribers
+    FleeingState ..> SkittishStrategy : onEnter sets
+    GameContext o-- GameState : current state
+    GameEventListener <|.. AchievementSystem
+    GameEventListener <|.. CombatLog
+    GameEventListener <|.. DangerMeter
+    GameEventListener <|.. QuestTracker
+    GameState <|.. CombatState
+    GameState <|.. ExploringState
+    GameState <|.. GameOverState
+    GameState <|.. InventoryState
+    GameWorld o-- DungeonLevel : levels
+    Item <|.. Armor
+    Item <|.. Hourglass
+    Item <|.. Potion
+    Item <|.. Treasure
+    Item <|.. Weapon
+    MacroCommand o-- Command : children
+    Monster o-- CombatStrategy : current strategy
+    Monster o-- MonsterState : current state
+    MonsterFactory ..> MonsterDef : reads definitions
+    MonsterState <|.. DeadState
+    MonsterState <|.. EnragedState
+    MonsterState <|.. FleeingState
+    MonsterState <|.. HuntingState
+    MonsterState <|.. IdleState
+    Room o-- Monster : monsters
+    RoomPopulator <|-- BossRoomPopulator
+    RoomPopulator <|-- StandardRoomPopulator
+    RoomPopulator <|-- TreasureRoomPopulator
+    ThemeKit <|.. CryptThemeKit
+    ThemeKit <|.. ForgeThemeKit
+    ThemeKit <|.. FrostThemeKit
+    ThemeKit <|.. WinterfellThemeKit
+    ThemeRegistry o-- ThemeKit : kits
+    TurnSnapshot o-- CombatStrategy : saves and restores
+    TurnSnapshot o-- MonsterState : saves and restores
