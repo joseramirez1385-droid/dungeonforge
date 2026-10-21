@@ -25,7 +25,7 @@ public class FactoryTest {
         factory = new MonsterFactory();
     }
 
-    // US-2.1 Simple Factory
+    // US-2.1: Simple Factory
     @Test
     void everyBlueprintInTheDataFileIsRegistered() {
         assertEquals(19, factory.blueprintCount());
@@ -41,7 +41,7 @@ public class FactoryTest {
     }
 
     @Test
-    void anUnknownIdProducesAFallBackRatherThanAnException() {
+    void anUnknownIdProducesAFallbackRatherThanAnException() {
         Monster m = assertDoesNotThrow(() -> factory.create("my_nonexistent_monster", 1));
         assertNotNull(m);
         assertTrue(m.getMaxHp() > 0);
@@ -50,27 +50,27 @@ public class FactoryTest {
     @Test
     void monstersScaleWithDepth() {
         RandomSource.getInstance().reseed(42L);
-        Monster shallow =factory.create("skeleton", 1);
+        Monster shallow = factory.create("skeleton", 1);
         RandomSource.getInstance().reseed(42L);
         Monster deep = factory.create("skeleton", 5);
         assertTrue(deep.getMaxHp() > shallow.getMaxHp(),
-                "a level-5 skeleton should be tougher than a level one skeleton ");
+                "a level-5 skeleton should be tougher than a level-1 skeleton.");
     }
 
     @Test
     void bossesAreExcludedFromTheOrdinarySpawnPool() {
-        assertFalse(factory.idsForTheme("crypt").contains("bone_tyrant"));
+        assertFalse(factory.idsForTheme("crypt").contains("bone_trant"));
         assertEquals("bone_tyrant", factory.bossIdForTheme("crypt"));
     }
 
-    // Test for US-2.2
+    // Tests for US-2.2
     @Test
     void aThemeKitOnlyEverProducesItsOwnFamily() {
         ThemeKit crypt = new CryptThemeKit(factory);
         Set<String> cryptNames = Set.of("Skeleton", "Crypt Rat", "Wight", "Ghoul", "Bone Priest");
-        for(int i=0; i < 50; i++){
+        for(int i=0; i < 50; i++) {
             assertTrue(cryptNames.contains(crypt.createMonster(1).getName()),
-                    "a CryptThemeKit must never hand back a non-crypt monster.");
+                    "a CryptThemeKit must never hand back a non-crypt monster");
         }
     }
 
@@ -103,7 +103,6 @@ public class FactoryTest {
         assertEquals("Frost", registry.forDepth(3).themeName());
         assertEquals("Winterfell", registry.forDepth(4).themeName());
         assertEquals("Crypt", registry.forDepth(5).themeName());
-
     }
 
     @Test
@@ -112,16 +111,16 @@ public class FactoryTest {
 
         for(DungeonLevel level : world.getLevels()) {
             Set<String> allowed = switch (level.getThemeName()) {
-              case "Crypt" -> Set.of("Skeleton", "Crypt Rat", "Wight", "Bone Priest", "Ghoul", "Bone Tyrant");
-              case "Forge" -> Set.of("Imp", "Slag Hound", "Ember Sprite", "Forge Golem", "Forge Tyrant");
-              case "Frost" -> Set.of("Frost Wight", "Rime Stalker", "Ice Lurker", "Hoar Shade", "Rime Tyrant");
-              case "Winterfell" -> Set.of("Direwolf", "White Walker", "Night King Tyrant");
-              default -> Set.of();
+                case "Crypt" -> Set.of("Skeleton", "Crypt Rat", "Wight", "Bone Priest", "Ghoul", "Bone Tyrant");
+                case "Forge" -> Set.of("Imp", "Slag Hound", "Ember Sprite", "Forge Golem", "Forge Tyrant");
+                case "Frost" -> Set.of("Frost Wight", "Rime Stalker", "Ice Lurker", "Hoar Shade", "Rime Tyrant");
+                case "Winterfell" -> Set.of("Direwolf", "White Walker", "Night King Tyrant");
+                default -> Set.of();
             };
             for(Room room : level.getRooms()) {
                 for(Monster m : room.getMonsters()) {
                     assertTrue(allowed.contains(m.getName()),
-                            m.getName() + " does not belong on a " + level.getThemeName() + "level");
+                            m.getName() + " does not belong on a " + level.getThemeName() + " level");
                 }
             }
         }
@@ -132,14 +131,14 @@ public class FactoryTest {
     void populateIsFinalSoSubclassesCannotBreakTheOrder() throws Exception{
         Method populate = RoomPopulator.class.getDeclaredMethod("populate", Room.class, int.class);
         assertTrue(Modifier.isFinal(populate.getModifiers()),
-                "populate() must be final -- the ORDER is the invariant this class exists to protects.");
+                "populate() must be final -- the ORDER is the invariant this class exists to protect.");
     }
 
     @Test
-    void createEncounterIsAbstractSoEverySubclassMustAnswer() throws Exception {
+    void createEncounterIsAbstractSoEverySubclassMustAnserIt() throws Exception {
         Method create = RoomPopulator.class.getDeclaredMethod("createEncounter", int.class);
         assertTrue(Modifier.isAbstract(create.getModifiers()),
-                "create() must be Abstract -- this is the Factory Method Subclasses MUST implement.");
+                "create() must be abstract -- this is the Factory Method SubClasses MUST implement.");
     }
 
     @Test
@@ -153,7 +152,7 @@ public class FactoryTest {
     }
 
     @Test
-    void aTreasureRoomGetsAChestWithWithThemeAppropriateLoot() {
+    void aTreasureRoomGetsAChestWithThemeAppropriateLoot() {
         RoomPopulator treasure = new TreasureRoomPopulator(new ForgeThemeKit(factory));
         Room room = new Room("Test");
         treasure.populate(room, 2);
@@ -166,22 +165,21 @@ public class FactoryTest {
     @Test
     void theFinalRoomOfTheDungeonHoldsTheBoss() {
         GameWorld world = new GameWorld(new Player("Tester"));
-        List<DungeonLevel> levels = world.getLevels();
-        DungeonLevel last= levels.get(levels.size() - 1);
+        List<DungeonLevel> levels  = world.getLevels();
+        DungeonLevel last = levels.get(levels.size() - 1);
         Room finalRoom = last.getRooms().get(last.getRooms().size() - 1);
 
         assertTrue(finalRoom.getMonsters().stream().anyMatch(m -> m.getName().contains("Tyrant")),
-                "the last room of the last level should contain a boss.");
+                "the last room of the last level should contain a boss");
     }
 
     @Test
-    void theWorldStillGeneratesDeterministicallyFromASeed() {
+    void theWorldStillGenerateesDeterministicallyFromASeed() {
         RandomSource.getInstance().reseed(77L);
         int first = new GameWorld(new Player("A")).totalMonsters();
         RandomSource.getInstance().reseed(77L);
         int second = new GameWorld(new Player("B")).totalMonsters();
 
-        assertEquals(first, second,"Singleton's MUST still guarantee a deterministic world.");
+        assertEquals(first, second, "Singlton's MUST still guarantee a deterministic world.");
     }
-
 }

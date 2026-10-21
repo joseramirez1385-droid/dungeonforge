@@ -61,8 +61,9 @@ public class CommandParser {
                     "You cannot '" + verb + "' here. Type 'help' for what you can do.");
         }
         if (!ctx.allowedVerbs().contains(verb)) {
-            return new NoCommand(ctx.getBus(), "You cannot do that in " + ctx.getState().name()
-                    + " mode.\nAvailable here: " + String.join(", ", ctx.allowedVerbs()));
+            return new NoCommand(ctx.getBus(),
+                    "You cannot do that in " + ctx.getState().name() + " mode. " +
+                    "\n    Available here: " + String.join(", ", ctx.allowedVerbs()));
         }
         return factory.create(ctx, args);
     }
@@ -72,6 +73,11 @@ public class CommandParser {
         register("north", (c, a) -> new MoveCommand(c, "north"));
         register("south", (c, a) -> new MoveCommand(c, "south"));
         register("down",  (c, a) -> new MoveCommand(c, "down"));
+
+        // WEEK 9 (PROVIDED) -- the whole wiring cost of two new verbs. Four lines.
+        register("equip", EquipCommand::new);
+        alias("e", "equip");
+        register("enchant", EnchantCommand::new);
         alias("n", "north");
         alias("s", "south");
         alias("d", "down");
@@ -145,6 +151,7 @@ public class CommandParser {
 
         register("pack", (c, a) -> new SimpleCommand("pack", c::openPack));
         register("back", (c, a) -> new SimpleCommand("back", c::closePack));
+
 
         register("quit", (c, a) -> new SimpleCommand("quit", () -> {
             c.getBus().message("You lay down your pack.");

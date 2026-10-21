@@ -10,7 +10,7 @@ public class WinterfellThemeKit implements ThemeKit {
     private static final String[] FLAVORS = {
             "The cold is biting at your nose. Direwolves glare from the forest edge.",
             "In the distance you see a pyre of smoke rising beyond the wall.",
-            "The blue eyes of a white Walker peers into your soul like a dagger.",
+            "The blue eyes of a White Walker peers into your soul like a dagger.",
             "A Direwolf chews on a bloody bone in the corner of the pub. The locals glare at you, the newcomer."
     };
 
@@ -37,7 +37,10 @@ public class WinterfellThemeKit implements ThemeKit {
     @Override
     public Item createLoot(int depth) {
         switch(RandomSource.getInstance().nextInt(4)) {
-            case 0: return new Weapon("Valyrian Steel Greatsword", 6.0, 80 + depth*10, 6 + depth);
+            // WEEK 9 STARTER -- the theme decides which of the seven subclasses to name. A kit
+            // should be able to say "fiery" without a class existing for every combination of
+            // fiery with everything else. Right now it cannot.
+            case 0: return new FrostVampiricWeapon("Valyrian Steel Greatsword", 6.0, 80 + depth*10, 6 + depth);
             case 1: return new Armor("Direwolf pup", 2.0, 45 + depth*8, 5 + depth);
             case 2: return new Potion("Ice Magic", 0.4, 15, 10 + depth * 3);
             default: return new Treasure("Dragon Eggs", 0.5, 60 + depth*15);
