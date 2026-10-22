@@ -75,7 +75,7 @@ finished.*
 - Given the failing test is repaired and pushed, when the workflow re-runs, then the check reports success.
 
 **Sub-tasks**
-- [ ] Add `../.github/workflows/ci.yml`
+- [ ] Add `.github/workflows/ci.yml`
 - [ ] Deliberately break a test and push it
 - [ ] Screenshot the red check and read the Actions log
 - [ ] Repair, push, screenshot the green check

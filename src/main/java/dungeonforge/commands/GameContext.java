@@ -28,6 +28,7 @@ public class GameContext {
 
     private Room currentRoom;
     private boolean running = true;
+
     private GameState state = new ExploringState();
 
     public GameContext(GameWorld world, Player player, EventBus bus,
@@ -44,16 +45,15 @@ public class GameContext {
         if (next == null || next.getClass() == state.getClass()) return;
         state.onExit(this);
         state = next;
-        state.onEnter(this);
+        next.onEnter(this);
     }
 
     public void syncState() {
-        if (!player.isAlive() || !running) {
+        if (state.isTerminal()) return;
+        if (!player.isAlive()) {
             transitionTo(new GameOverState());
             return;
         }
-
-        if (state instanceof GameOverState) return;
         if (state instanceof InventoryState) return;
 
         if (currentRoom.hasLivingMonsters()) transitionTo(new CombatState());
@@ -71,12 +71,10 @@ public class GameContext {
     public void setCurrentRoom(Room r)   { this.currentRoom = r; }
     public boolean isRunning()           { return running; }
     public void stop()                   { this.running = false; }
-    public GameState getState()          { return state; }
+    public GameState getState() { return state; }
 
-    public void openPack() { transitionTo(new InventoryState()); }
-    public void closePack() { transitionTo(new ExploringState());
-        syncState();
-    }
+    public void openPack() {transitionTo(new InventoryState());}
+    public void closePack() {transitionTo(new ExploringState());}
 
     /** After a turn-ending command, the monsters get their round. */
     public void runMonsterTurns() {

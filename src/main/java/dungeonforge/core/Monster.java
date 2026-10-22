@@ -51,29 +51,27 @@ public class Monster extends Entity {
     public CombatStrategy getStrategy()              { return strategy; }
     public void setStrategy(CombatStrategy strategy) { this.strategy = strategy; }
 
-    public MonsterState getState() { return stateName; }
+    public MonsterState getState()          { return stateName; }
 
-    public void setState(MonsterState name) {
-        if (name == null || name == this.stateName)  return;
-        this.stateName = name;
-        name.onEnter(this);
+    public void setState(MonsterState next) {
+        if (next == null || next == this.stateName) return;
+        this.stateName = next;
+        next.onEnter(this);
     }
 
     /**
-     * Only TurnSnapshot should call this.* Anything else is a transition and belongs above.
-     */
+    * Only TurnSnapshot should call this. Anything else is a transition and belongs above.
+    */
     public void restoreState(MonsterState previous) {
         if (previous != null) this.stateName = previous;
     }
-
 
     /** How close to death, as a fraction. Strategies read this to decide whether to run. */
     public double hpFraction() { return maxHp == 0 ? 0 : (double) hp / maxHp; }
 
     @Override
     public String describe() {
-        return species + " (" + hp + "/" + maxHp
-                + " HP, ATK " + attackPower
+        return species + " (" + hp + "/" + maxHp + " HP, ATK " + attackPower
                 + ", " + stateName.label() + ")";
     }
 }

@@ -22,7 +22,7 @@
 |---|---|
 | Maven or JDK 21 not installed, blocking every story | Verify `mvn -v` and `java -version` first; IntelliJ bundles Maven if needed |
 | `gh` CLI authentication fails, blocking the seed | `docs/backlog.md` contains every issue for manual creation — about twenty minutes |
-| Hidden `../.github` folder not copied on macOS | Cmd+Shift+. reveals hidden files in Finder; confirm with `ls -a` |
+| Hidden `.github/` folder not copied on macOS | Cmd+Shift+. reveals hidden files in Finder; confirm with `ls -a` |
 
 ---
 
@@ -35,21 +35,15 @@
 > learn this from theory.
 
 | Story | Estimated points | Actual hours | Was the estimate high, low, or about right? |
-|---|---|--------------|---------------------------------------------|
-| S0.1 | 3 | 2            | low                                         |
-| S0.2 | 2 | 2            | about right                                 |
-| S0.3 | 2 | 2            | about right                                 |
+|---|---|---|---|
+| S0.1 | 3 | | |
+| S0.2 | 2 | | |
+| S0.3 | 2 | | |
 
-**Points completed (my first velocity number):** __10__
+**Points completed (my first velocity number):** ____
 
 ## Sprint Review — one sentence
-All the acceptance criteria in the linked issues now work.
-[#16](https://github.com/joseramirez1385-droid/dungeonforge/issues/16)
-[#17](https://github.com/joseramirez1385-droid/dungeonforge/issues/17)
-[#18](https://github.com/joseramirez1385-droid/dungeonforge/issues/18)
 
 > What can the project do now that it could not do at the start of the week?
 
-The project can now have different parts of the program get settings from one shared location
-instead of each creating their own configuration.
 

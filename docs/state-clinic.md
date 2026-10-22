@@ -10,24 +10,20 @@ Open `docs/strategy-observer-clinic.md` from Week 5 and find your D4 answer.
 **Paste it here, unedited:**
 
 ```
-My guess is that Strategy controls how a monster performs an action, such as attacking or healing, 
-while State controls  what the monster can do based on its current condition.
+
 ```
 
 **Now, having built both, mark your own work:**
 
-| | Your Week 5 guess | What you would say now                                                                              |
-|---|-------------------|-----------------------------------------------------------------------------------------------------|
-| Who decides which one is active? | States            | Other code assigns the strategy. The current state selects its successor through next().                                                                                        |
-| Do the alternatives know about each other? | Strategy          | Strategies do not need to know about each other, but states refer to other states when choosing transitions.                                                                                              |
-| What question does it answer about a monster? | Strategy          | Strategy answers how the monster fights. State controls its lifecycle and when it can act or change behavior.                                                                                            |
-| Can it change while the object is alive? | States            | Both can change. A strategy can be replaced, and a state changes as conditions trigger transitions. |
+| | Your Week 5 guess | What you would say now |
+|---|---|---|
+| Who decides which one is active? | | |
+| Do the alternatives know about each other? | | |
+| What question does it answer about a monster? | | |
+| Can it change while the object is alive? | | |
 
 **How close were you?** Circle one and justify it in a sentence:
 *dead on · half right · reasonable but wrong · nowhere near*
-
-Half right: I connected Strategy with how a monster behaves, but I did not fully understand who selects each strategy 
-or state, or how states refer to each other during transitions.
 
 
 > **You are not graded on having been right.** You are graded on the honesty of the comparison
@@ -89,7 +85,7 @@ In Week 7, typing `north` during a fight got you told off. In Week 8 it is not o
 
 ### The questions
 
-**1.** Count the mode guards you deleted from command classes: __3__
+**1.** Count the mode guards you deleted from command classes: ____
 Which files were they in?
 
 **2.** `help` now prints a different list in each mode, and you did not write any code to make

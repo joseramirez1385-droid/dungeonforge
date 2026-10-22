@@ -1,192 +1,210 @@
 classDiagram
+    direction TB
+
+%% =========================================================
+%% Main application
+%% =========================================================
 
     class Main {
-        +VERSION : String
+        <<final>>
+        +String VERSION
         -Main()
-        +banner() String
-        +main(args) void
+        +String banner()$
+        +void main(String[] args)$
     }
+
+%% =========================================================
+%% Configuration package
+%% =========================================================
 
     class GameConfig {
-        -instance : GameConfig
-        -settings : Map
+        -GameConfig instance$
+        -Map~String,Object~ settings
         -GameConfig()
-        +getInstance() GameConfig
-        -loadDefaults() void
-        -loadFromClasspath(resourceName) void
-        +getInt(key) int
-        +getDouble(key) double
-        +getSeed() long
-        +resetForTest() void
-    }
-
-    class Json {
-        -s : String
-        -i : int
-        -Json(s)
-        +parseObject(text) Map
-        -ws() void
-        -value() Object
-        -object() Map
-        -array() List
-        -string() String
-        -number() Double
+        +GameConfig getInstance()$
+        -void loadDefaults()
+        -void loadFromClasspath(String resourceName)
+        +int getInt(String key)
+        +double getDouble(String key)
+        +long getSeed()
+        +void resetForTests()$
     }
 
     class RandomSource {
-        -instance : RandomSource
-        -rng : Random
-        -seed : long
+        <<final>>
+        -RandomSource instance$
+        -Random rng
+        -long seed
         -RandomSource()
-        +getInstance() RandomSource
-        +nextInt(bound) int
-        +between(lo, hi) int
-        +nextDouble() double
-        +pick(options) T
-        +getseed() long
-        +reseed(newSeed) void
-        +resetForTest() void
+        +RandomSource getInstance()$
+        +int nextInt(int bound)
+        +int between(int lo, int hi)
+        +double nextDouble()
+        +T pick(List~T~ options)
+        +T pick(T[] options)
+        +long getSeed()
+        +void reseed(long newSeed)
+        +void resetForTests()$
     }
+
+    class Json {
+        <<final>>
+        -String s
+        -int i
+        -Json(String s)
+        +Map~String,Object~ parseObject(String text)$
+        -void ws()
+        -Object value()
+        -Map~String,Object~ object()
+        -List~Object~ array()
+        -String string()
+        -Double number()
+    }
+
+%% =========================================================
+%% Core domain
+%% =========================================================
 
     class Entity {
         <<abstract>>
-        #name : String
-        #hp : int
-        #maxHp : int
-        #attackPower : int
-        #defense : int
-        #Entity(name, maxHp, attackPower, defense)
-        +getName() String
-        +getHp() int
-        +getMaxHp() int
-        +getAttackPower() int
-        +getDefense() int
-        +isAlive() boolean
-        +takeDamage(amount) void
-        +heal(amount) void
-        +describe() String
-        +toString() String
+        #String name
+        #int hp
+        #int maxHp
+        #int attackPower
+        #int defense
+        #Entity(String name, int maxHp, int attackPower, int defense)
+        +String getName()
+        +int getHp()
+        +int getMaxHp()
+        +int getAttackPower()
+        +int getDefense()
+        +boolean isAlive()
+        +void takeDamage(int amount)
+        +void heal(int amount)
+        +String describe()*
+        +String toString()
     }
 
     class Player {
-        -gold : int
-        -xp : int
-        +Player(name)
-        +getGold() int
-        +getXp() int
-        +addGold(g) void
-        +addXp(x) void
-        +carryCapacity() double
-        +describe() String
+        -int gold
+        -int xp
+        +Player(String name)
+        +int getGold()
+        +int getXp()
+        +void addGold(int g)
+        +void addXp(int x)
+        +double carryCapacity()
+        +String describe()
     }
 
     class Monster {
-        -species : String
-        -xpReward : int
-        +Monster(species, baseHp, baseAttack, xpReward)
-        +getSpecies() String
-        +getXpReward() int
-        +describe() String
-    }
-
-    class Room {
-        -FLAVORS : String[]
-        -id : String
-        -flavor : String
-        -monsters : List
-        +Room(id)
-        +getId() String
-        +getFlavor() String
-        +getMonsters() List
-        +addMonster(m) void
-    }
-
-    class DungeonLevel {
-        -depth : int
-        -rooms : List
-        +DungeonLevel(depth)
-        +getDepth() int
-        +getRooms() List
-        +addRoom(r) void
+        -String species
+        -int xpReward
+        +Monster(String species, int baseHp, int baseAttack, int xpReward)
+        +String getSpecies()
+        +int getXpReward()
+        +String describe()
     }
 
     class GameWorld {
-        -player : Player
-        -levels : List
-        +GameWorld(player)
-        -generate() void
-        -spawn(depth) Monster
-        +getPlayer() Player
-        +getLevels() List
-        +totalMonsters() int
+        -Player player
+        -List~DungeonLevel~ levels
+        +GameWorld(Player player)
+        -void generate()
+        -Monster spawn(int depth)
+        +Player getPlayer()
+        +List~DungeonLevel~ getLevels()
+        +int totalMonsters()
+    }
+
+    class DungeonLevel {
+        -int depth
+        -List~Room~ rooms
+        +DungeonLevel(int depth)
+        +int getDepth()
+        +List~Room~ getRooms()
+        +void addRoom(Room r)
+    }
+
+    class Room {
+        -String[] FLAVORS$
+        -String id
+        -String flavor
+        -List~Monster~ monsters
+        +Room(String id)
+        +String getId()
+        +String getFlavor()
+        +List~Monster~ getMonsters()
+        +void addMonster(Monster m)
+    }
+
+%% =========================================================
+%% Tests
+%% =========================================================
+
+    class SkeletonTest {
+        <<test>>
+        +void versionIsSet()
+        +void bannerNamesTheProject()
     }
 
     class SingletonTest {
-        +freshSingletons() void
-        +configReturnsTheSameInstanceEveryTime() void
-        +configConstructorIsPrivate() void
-        +aPlayerIsBuiltFromConfiguredValues() void
-        +unknownKeysDoNotCrashTheGame() void
-        +randomSourceReturnsTheSameInstanceEveryTime() void
-        +randomSourceConstructorIsPrivate() void
-        +theSameSeedProducesTheSameSeedSequence() void
-        +theDifferentSeedProducesTheDifferentSeedSequence() void
-        +TheSameSeedProducesTheSameDungeon() void
-        -tenRolls() int[]
+        <<test>>
+        +void freshSingletons()
+        +void configReturnsTheSameInstanceEveryTime()
+        +void configConstructorIsPrivate()
+        +void aPlayerIsBuiltFromConfiguredValues()
+        +void unknownKeysDoNotCrashTheGame()
+        +void randomSourceReturnsTheSameInstanceEveryTime()
+        +void randomSourceConstructorIsPrivate()
+        +void theSameSeedProducesTheSameSeedSequence()
+        +void theDifferentSeedProducesADifferentSequence()
+        +void theSameSeedProducesTheSameDungeon()
+        -int[] tenRolls()
     }
 
-    class SkeletonTest {
-        +versionIsSet() void
-        +bannerNamesTheProject() void
-    }
-
-%% =========================================
+%% =========================================================
 %% Inheritance
-%% =========================================
+%% =========================================================
 
-    Entity <|-- Player : extends
-    Entity <|-- Monster : extends
+    Entity <|-- Player
+    Entity <|-- Monster
 
-%% =========================================
-%% Object relationships
-%% =========================================
+%% =========================================================
+%% Domain composition
+%% =========================================================
 
-    GameWorld *-- Player : owns
-    GameWorld *-- DungeonLevel : contains
-    DungeonLevel *-- Room : contains
-    Room *-- Monster : contains
+    GameWorld *-- "1" Player : owns
+    GameWorld *-- "0..*" DungeonLevel : contains
+    DungeonLevel *-- "0..*" Room : contains
+    Room *-- "0..*" Monster : contains
 
-%% =========================================
-%% Configuration dependencies
-%% =========================================
+%% =========================================================
+%% Configuration / service dependencies
+%% =========================================================
 
-    GameConfig ..> Json : parses config
-    RandomSource ..> GameConfig : reads seed
-
-    Player ..> GameConfig : reads player settings
-    GameWorld ..> GameConfig : reads dungeon settings
-
-%% =========================================
-%% Randomness dependencies
-%% =========================================
-
-    GameWorld ..> RandomSource : generates monsters
+    Player ..> GameConfig : reads settings
+    GameWorld ..> GameConfig : reads settings
+    GameWorld ..> RandomSource : generates dungeon
     Room ..> RandomSource : chooses flavor
-    Monster ..> RandomSource : varies stats
+    Monster ..> RandomSource : generates stat variance
+    RandomSource ..> GameConfig : gets initial seed
+    GameConfig ..> Json : parses config.json
 
-%% =========================================
-%% Main dependencies
-%% =========================================
+%% =========================================================
+%% Application dependencies
+%% =========================================================
 
+    Main ..> RandomSource : reseed / getSeed
     Main ..> Player : creates
     Main ..> GameWorld : creates
     Main ..> DungeonLevel : iterates
     Main ..> Room : iterates
     Main ..> Monster : iterates
 
-%% =========================================
+%% =========================================================
 %% Test dependencies
-%% =========================================
+%% =========================================================
 
     SkeletonTest ..> Main : tests
 

@@ -1,8 +1,8 @@
-
 help
-n
-hit
+north
+a
 hit
 loot
-n
+north
+look
 quit

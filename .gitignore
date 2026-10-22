@@ -1,4 +1,4 @@
-../../target/
+target/
 out/
 build/
 .venv/
@@ -15,4 +15,3 @@ saves/
 .project
 .DS_Store
 Thumbs.db
-target/

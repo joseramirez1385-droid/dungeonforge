@@ -43,7 +43,6 @@ class StateTest {
         EventBus bus = new EventBus();
         QuestTracker quests = new QuestTracker(bus);
         AchievementSystem achievements = new AchievementSystem(bus);
-
         history = new CommandHistory();
         ctx = new GameContext(world, player, bus, new Combat(bus), history);
         parser = new CommandParser(quests, achievements);
@@ -88,7 +87,7 @@ class StateTest {
         assertInstanceOf(ExploringState.class, ctx.getState());
     }
 
-    /** Combat does not list movement at all. */
+    /** ILLEGAL, not merely rejected: combat does not list movement at all. */
     @Test
     void movementIsNotAvailableDuringCombat() {
         ctx.getCurrentRoom().getMonsters().add(monster("Skeleton", 30, 2));
@@ -104,7 +103,7 @@ class StateTest {
         assertInstanceOf(NoCommand.class, parser.parse("attack", ctx));
     }
 
-    /** The rule belongs in the mode, not inside each command. */
+    /** The rule lives in ONE place now, not in a guard inside each command. */
     @Test
     void commandsNoLongerCarryTheirOwnModeGuards() throws Exception {
         for (String file : new String[]{"MoveCommand", "TakeCommand", "DropCommand"}) {
@@ -124,7 +123,6 @@ class StateTest {
         assertNotEquals(exploringVerbs, ctx.allowedVerbs().size(),
                 "the legal verb list must change with the mode");
     }
-
 
     // ---------- US-6.2: dedicated screens ----------
 
@@ -157,9 +155,7 @@ class StateTest {
         assertFalse(ctx.allowedVerbs().contains("north"));
     }
 
-
-
-// ---------- US-6.3: monsters have a lifecycle ----------
+    // ---------- US-6.3: monsters have a lifecycle ----------
 
     @Test
     void aMonsterStartsIdleAndCannotAct() {
@@ -178,8 +174,8 @@ class StateTest {
     void aWoundedHunterEnrages() {
         Monster m = monster("Skeleton", 20, 3);
         m.setState(new HuntingState());
-        // 40% left, under the 45% enrage threshold.
-        m.takeDamage(12);
+        m.takeDamage(12);                 // 40% left, under the 45% enrage threshold
+
         assertInstanceOf(EnragedState.class, m.getState().next(m, player));
     }
 
@@ -187,8 +183,8 @@ class StateTest {
     void aBadlyWoundedMonsterFlees() {
         Monster m = monster("Skeleton", 20, 3);
         m.setState(new HuntingState());
-        // 20% left, under the 30% flee threshold.
-        m.takeDamage(16);
+        m.takeDamage(16);                 // 20% left, under the 30% flee threshold
+
         assertInstanceOf(FleeingState.class, m.getState().next(m, player));
     }
 
@@ -197,6 +193,7 @@ class StateTest {
         Monster m = monster("Skeleton", 20, 3);
         m.setState(new HuntingState());
         m.takeDamage(20);
+
         MonsterState next = m.getState().next(m, player);
         assertInstanceOf(DeadState.class, next);
         assertFalse(next.canAct());
@@ -210,9 +207,7 @@ class StateTest {
         assertEquals(EnragedState.DAMAGE_BONUS, new EnragedState().damageMultiplier(), 0.001);
     }
 
-    /**
-     * Combat must not enumerate state names any more.
-     */
+    /** Combat must not enumerate state names any more. */
     @Test
     void combatNoLongerBranchesOnStateNames() throws Exception {
         String source = java.nio.file.Files.readString(
@@ -222,27 +217,6 @@ class StateTest {
         assertFalse(source.contains("\"enraged\""));
         assertFalse(source.contains("\"fleeing\""));
         assertFalse(source.contains("\"idle\""));
-    }
-
-    // ---------- regression ----------
-
-    @Test
-    void earlierWeeksStillHold() {
-        assertEquals(19, ctx.getWorld().getMonsterFactory().blueprintCount(), "Week 4");
-        Room start = ctx.getCurrentRoom();
-        run("north");
-
-        assertNotSame(start, ctx.getCurrentRoom());
-        assertTrue(history.undoLast(), "Week 7 undo");
-        assertSame(start, ctx.getCurrentRoom());
-
-        RandomSource.getInstance().reseed(7L);
-        int a = new GameWorld(new Player("A")).totalMonsters();
-
-        RandomSource.getInstance().reseed(7L);
-        int b = new GameWorld(new Player("B")).totalMonsters();
-
-        assertEquals(a, b, "Week 3 determinism");
     }
 
     // ---------- US-6.4: State and Strategy are different things ----------
@@ -258,7 +232,7 @@ class StateTest {
         assertEquals("idle", m.getState().label());
     }
 
-    /** A STATE transition can change the STRATEGY. */
+    /** THE demonstration: a STATE transition can change the STRATEGY. */
     @Test
     void enteringRageMakesEvenAHealerAggressive() {
         Monster priest = monster("Bone Priest", 20, 3);
@@ -268,7 +242,7 @@ class StateTest {
         priest.setState(new EnragedState());
 
         assertEquals("aggressive", priest.getStrategy().name(),
-                "EnragedState.onEnter should swap the strategy " + "-- state decides WHEN, strategy is WHAT");
+                "EnragedState.onEnter should swap the strategy -- state decides WHEN, strategy is WHAT");
     }
 
     @Test
@@ -278,7 +252,7 @@ class StateTest {
         assertInstanceOf(SkittishStrategy.class, m.getStrategy());
     }
 
-    /** The arrow only points one way. A strategy never sets a state. */
+    /** ...but the arrow only points one way. A strategy never sets a state. */
     @Test
     void changingStrategyDoesNotChangeState() {
         Monster m = monster("Skeleton", 20, 3);
@@ -290,5 +264,118 @@ class StateTest {
         assertInstanceOf(HuntingState.class, m.getState(),
                 "swapping tactics must not move the monster through its lifecycle");
         assertNotSame(before, m.getStrategy());
+    }
+
+    // ---------- regression ----------
+
+    @Test
+    void earlierWeeksStillHold() {
+        assertEquals(19, ctx.getWorld().getMonsterFactory().blueprintCount(), "Week 4");
+
+        Room start = ctx.getCurrentRoom();
+        run("north");
+        assertNotSame(start, ctx.getCurrentRoom());
+        assertTrue(history.undoLast(), "Week 7 undo");
+        assertSame(start, ctx.getCurrentRoom());
+
+        RandomSource.getInstance().reseed(7L);
+        int a = new GameWorld(new Player("A")).totalMonsters();
+        RandomSource.getInstance().reseed(7L);
+        int b = new GameWorld(new Player("B")).totalMonsters();
+        assertEquals(a, b, "Week 3 determinism");
+    }
+
+    // ---------- US-6.7 (carried over from Sprint 6):
+// one answer to "is the game over?" ----------
+
+    @Test
+    void deathIsATerminalStateButTheSessionKeepsRunning() {
+        Monster butcher = new Monster("Butcher", 500, 999, 1);
+        butcher.setStrategy(new AggressiveStrategy());
+        ctx.getCurrentRoom().getMonsters().add(butcher);
+        ctx.syncState();
+        butcher.setState(new HuntingState());
+        player.setHp(1);
+
+        run("attack");
+        ctx.syncState();
+
+        assertFalse(player.isAlive());
+        assertInstanceOf(GameOverState.class, ctx.getState());
+        assertTrue(ctx.getState().isTerminal());
+        assertTrue(ctx.isRunning());
+    }
+
+    @Test
+    void theGameOverVerbListIsReachableAtLast() {
+        player.setHp(0);
+        ctx.syncState();
+
+        assertInstanceOf(GameOverState.class, ctx.getState());
+        assertTrue(ctx.allowedVerbs().contains("quests"));
+        assertTrue(ctx.allowedVerbs().contains("quit"));
+        assertFalse(ctx.allowedVerbs().contains("north"));
+        assertFalse(ctx.allowedVerbs().contains("attack"));
+    }
+
+    @Test
+    void gameOverIsSomewhereYouStay() {
+        player.setHp(0);
+        ctx.syncState();
+        assertInstanceOf(GameOverState.class, ctx.getState());
+
+        player.heal(999);
+        ctx.syncState();
+        ctx.syncState();
+
+        assertInstanceOf(GameOverState.class, ctx.getState());
+    }
+
+    @Test
+    void quitEndsTheAdventureAndTheSessionTogether() {
+        assertTrue(ctx.isRunning());
+        run("quit");
+
+        assertInstanceOf(GameOverState.class, ctx.getState());
+        assertFalse(ctx.isRunning());
+    }
+
+    @Test
+    void aSyncDoesNotRestartASessionThePlayerEnded() {
+        run("quit");
+        ctx.syncState();
+        ctx.syncState();
+
+        assertFalse(ctx.isRunning());
+    }
+
+    @Test
+    void syncStateDecidesTheModeFromTheWorldAndNeverFromASessionFlag()
+            throws Exception {
+
+        String source = new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Path.of("src/main/java/dungeonforge/commands/GameContext.java")));
+
+        int syncAt = source.indexOf("public void syncState()");
+        assertTrue(syncAt > 0);
+
+        String body = codeOnly(source.substring(syncAt,
+                source.indexOf("public List<String> allowedVerbs()", syncAt)));
+
+        assertFalse(body.contains("running"));
+    }
+
+    @Test
+    void theGameLoopAsksOneQuestionNotTwo() throws Exception {
+        String main = codeOnly(new String(
+                java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/dungeonforge/Main.java"))));
+
+        assertFalse(main.contains("isRunning() && ctx.getPlayer().isAlive()"));
+
+        assertFalse(main.contains("!ctx.isRunning() || !ctx.getPlayer().isAlive()"));
+    }
+
+    private static String codeOnly(String source) {
+        return source.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("(?m)//.*$", "");
     }
 }

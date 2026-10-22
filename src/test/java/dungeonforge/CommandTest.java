@@ -1,9 +1,18 @@
 package dungeonforge;
 
-import dungeonforge.commands.*;
+import dungeonforge.commands.Command;
+import dungeonforge.commands.CommandHistory;
+import dungeonforge.commands.CommandParser;
+import dungeonforge.commands.GameContext;
+import dungeonforge.commands.MacroCommand;
+import dungeonforge.commands.NoCommand;
 import dungeonforge.config.GameConfig;
 import dungeonforge.config.RandomSource;
-import dungeonforge.core.*;
+import dungeonforge.core.Combat;
+import dungeonforge.core.GameWorld;
+import dungeonforge.core.Monster;
+import dungeonforge.core.Player;
+import dungeonforge.core.Room;
 import dungeonforge.events.AchievementSystem;
 import dungeonforge.events.EventBus;
 import dungeonforge.events.QuestTracker;
@@ -19,8 +28,8 @@ class CommandTest {
 
     private GameContext ctx;
     private CommandParser parser;
-    private Player player;
     private CommandHistory history;
+    private Player player;
 
     @BeforeEach
     void setUp() {
@@ -38,15 +47,21 @@ class CommandTest {
     }
 
     private void run(String input) {
-        ctx.syncState();
-
-        Command command = parser.parse(input, ctx);
-        command.execute();
-        history.push(command);
-
-        ctx.syncState();
+        Command c = parser.parse(input, ctx);
+        c.execute();
+        history.push(c);
     }
 
+    /**
+     * Puts a hostile monster in the current room THE WAY WALKING IN WOULD: in the room's list,
+     * and with the game told that a fight has started.
+     *
+     * `room.getMonsters().add(m)` on its own is a half-finished operation in a test. In real
+     * play you arrive through MoveCommand, which calls ctx.syncState() for you; a test that
+     * injects a monster directly has to finish the job itself. That one missing line is the
+     * single most expensive thing in this file, so it lives here now instead of in everybody's
+     * memory.
+     */
     private Monster spawnHostile(String name, int maxHp, int attack, int xpReward) {
         Monster m = new Monster(name, maxHp, attack, xpReward);
         m.setStrategy(new dungeonforge.behavior.AggressiveStrategy());
@@ -87,6 +102,14 @@ class CommandTest {
     }
 
     @Test
+    void aRefusedCommandDoesNotGoOnTheUndoStack() {
+        int before = history.depth();
+        run("south");                       // no exit south from the first room
+        assertEquals(before, history.depth(),
+                "a command that could not run must not be undoable");
+    }
+
+    @Test
     void readOnlyCommandsAreNeverUndoable() {
         assertFalse(parser.parse("look", ctx).isUndoable());
         assertFalse(parser.parse("inventory", ctx).isUndoable());
@@ -99,12 +122,16 @@ class CommandTest {
     void undoRestoresThePreviousRoom() {
         Room start = ctx.getCurrentRoom();
         run("north");
-
         assertNotSame(start, ctx.getCurrentRoom());
+
         assertTrue(history.undoLast());
         assertSame(start, ctx.getCurrentRoom());
     }
 
+    /**
+     * THE POINT OF PART D2: undoing an attack must also undo the monsters' reply.
+     * Remembering only the target's hit points would leave the player's damage in place.
+     */
     @Test
     void undoingAnAttackAlsoReversesTheCounterAttack() {
         Monster m = spawnHostile("Test Dummy", 40, 6, 9);
@@ -114,7 +141,7 @@ class CommandTest {
                 "an idle monster must not retaliate -- the first blow is free");
         assertEquals("hunting", m.getState().label(),
                 "...but it notices you on the way out of that turn. If this says 'idle', the "
-                        + "attack never ran at all -- look at the mode, not the state machine.");
+                        + "attack never ran at all -- look at the mode, not at the state machine.");
 
         // Turn 2 -- now there is a real exchange, so there is a counter-attack to undo.
         int hpBefore = player.getHp();
@@ -124,10 +151,13 @@ class CommandTest {
 
         assertTrue(player.getHp() < hpBefore, "the monster should have hit back");
         assertTrue(m.getHp() < monsterHpBefore);
+
         assertTrue(history.undoLast());
+
         assertEquals(hpBefore, player.getHp(), "undo must reverse the counter-attack too");
         assertEquals(monsterHpBefore, m.getHp());
     }
+
 
     @Test
     void undoRestoresXpAndGoldFromAKill() {
@@ -154,10 +184,7 @@ class CommandTest {
 
     @Test
     void theUndoStackIsBoundedButTheReplayLogIsNot() {
-        for (int i = 0; i < 60; i++) {
-            run("look");
-        }
-
+        for (int i = 0; i < 60; i++) run("look");        // not undoable, but logged
         assertEquals(0, history.depth());
         assertEquals(60, history.replayLog().size());
     }
@@ -183,33 +210,22 @@ class CommandTest {
         ctx.setCurrentRoom(room);
         room.getMonsters().clear();
 
-        int expected = room.getChest().getContents().size()
-                + room.getFloorItems().size();
-
+        int expected = room.getChest().getContents().size() + room.getFloorItems().size();
         run("loot");
         assertEquals(expected, player.getInventory().size());
 
         history.undoLast();
-
-        assertEquals(
-                0,
-                player.getInventory().size(),
-                "undoing a macro undoes all of it"
-        );
+        assertEquals(0, player.getInventory().size(), "undoing a macro undoes all of it");
     }
 
     @Test
     void lootInAnEmptyRoomIsANullObject() {
         Room bare = new Room("bare");
         ctx.setCurrentRoom(bare);
-
-        assertInstanceOf(
-                NoCommand.class,
-                parser.parse("loot", ctx)
-        );
+        assertInstanceOf(NoCommand.class, parser.parse("loot", ctx));
     }
 
-// ---------- US-5.4: the hourglass ----------
+    // ---------- US-5.4: the hourglass ----------
 
     @Test
     void theHourglassRewindsTheLastTurn() {
@@ -226,17 +242,11 @@ class CommandTest {
     @Test
     void aSpentHourglassRefuses() {
         player.addItem(new Hourglass(0));
-
         run("north");
         Room afterMove = ctx.getCurrentRoom();
 
         run("use hourglass");
-
-        assertSame(
-                afterMove,
-                ctx.getCurrentRoom(),
-                "a spent hourglass changes nothing"
-        );
+        assertSame(afterMove, ctx.getCurrentRoom(), "a spent hourglass changes nothing");
     }
 
     @Test
@@ -250,7 +260,7 @@ class CommandTest {
         assertNull(player.findItem("Test Draught"));
     }
 
-// ---------- the free capabilities ----------
+    // ---------- the free capabilities ----------
 
     @Test
     void theReplayLogRecordsWhatTheSessionActuallyDid() {
@@ -258,12 +268,8 @@ class CommandTest {
         run("north");
         run("status");
 
-        assertEquals(
-                java.util.List.of("look", "north", "status"),
-                history.replayLog()
-        );
+        assertEquals(java.util.List.of("look", "north", "status"), history.replayLog());
     }
-
 
     // ---------- regression ----------
 
@@ -283,15 +289,14 @@ class CommandTest {
 
     private Room findRoomWithLoot() {
         for (var level : ctx.getWorld().getLevels()) {
-            for (Room room : level.getRooms()) {
-                if (room.getChest() != null && room.getChest().getContents().size() >= 2) return room;
-                }
+            for (Room r : level.getRooms()) {
+                if (r.getChest() != null && r.getChest().getContents().size() >= 2) return r;
             }
+        }
         return null;
     }
 
-    private void assumeRoom(Room room) {assertNotNull(room, "the seeded world should " +
-            "contain at least one stocked chest"); }
-
+    private void assumeRoom(Room r) {
+        assertNotNull(r, "the seeded world should contain at least one stocked chest");
+    }
 }
-
