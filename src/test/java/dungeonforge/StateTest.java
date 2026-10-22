@@ -284,4 +284,98 @@ class StateTest {
         int b = new GameWorld(new Player("B")).totalMonsters();
         assertEquals(a, b, "Week 3 determinism");
     }
+
+    // ---------- US-6.7 (carried over from Sprint 6):
+// one answer to "is the game over?" ----------
+
+    @Test
+    void deathIsATerminalStateButTheSessionKeepsRunning() {
+        Monster butcher = new Monster("Butcher", 500, 999, 1);
+        butcher.setStrategy(new AggressiveStrategy());
+        ctx.getCurrentRoom().getMonsters().add(butcher);
+        ctx.syncState();
+        butcher.setState(new HuntingState());
+        player.setHp(1);
+
+        run("attack");
+        ctx.syncState();
+
+        assertFalse(player.isAlive());
+        assertInstanceOf(GameOverState.class, ctx.getState());
+        assertTrue(ctx.getState().isTerminal());
+        assertTrue(ctx.isRunning());
+    }
+
+    @Test
+    void theGameOverVerbListIsReachableAtLast() {
+        player.setHp(0);
+        ctx.syncState();
+
+        assertInstanceOf(GameOverState.class, ctx.getState());
+        assertTrue(ctx.allowedVerbs().contains("quests"));
+        assertTrue(ctx.allowedVerbs().contains("quit"));
+        assertFalse(ctx.allowedVerbs().contains("north"));
+        assertFalse(ctx.allowedVerbs().contains("attack"));
+    }
+
+    @Test
+    void gameOverIsSomewhereYouStay() {
+        player.setHp(0);
+        ctx.syncState();
+        assertInstanceOf(GameOverState.class, ctx.getState());
+
+        player.heal(999);
+        ctx.syncState();
+        ctx.syncState();
+
+        assertInstanceOf(GameOverState.class, ctx.getState());
+    }
+
+    @Test
+    void quitEndsTheAdventureAndTheSessionTogether() {
+        assertTrue(ctx.isRunning());
+        run("quit");
+
+        assertInstanceOf(GameOverState.class, ctx.getState());
+        assertFalse(ctx.isRunning());
+    }
+
+    @Test
+    void aSyncDoesNotRestartASessionThePlayerEnded() {
+        run("quit");
+        ctx.syncState();
+        ctx.syncState();
+
+        assertFalse(ctx.isRunning());
+    }
+
+    @Test
+    void syncStateDecidesTheModeFromTheWorldAndNeverFromASessionFlag()
+            throws Exception {
+
+        String source = new String(java.nio.file.Files.readAllBytes(
+                java.nio.file.Path.of("src/main/java/dungeonforge/commands/GameContext.java")));
+
+        int syncAt = source.indexOf("public void syncState()");
+        assertTrue(syncAt > 0);
+
+        String body = codeOnly(source.substring(syncAt,
+                source.indexOf("public List<String> allowedVerbs()", syncAt)));
+
+        assertFalse(body.contains("running"));
+    }
+
+    @Test
+    void theGameLoopAsksOneQuestionNotTwo() throws Exception {
+        String main = codeOnly(new String(
+                java.nio.file.Files.readAllBytes(java.nio.file.Path.of("src/main/java/dungeonforge/Main.java"))));
+
+        assertFalse(main.contains("isRunning() && ctx.getPlayer().isAlive()"));
+
+        assertFalse(main.contains("!ctx.isRunning() || !ctx.getPlayer().isAlive()"));
+    }
+
+    private static String codeOnly(String source) {
+        return source.replaceAll("(?s)/\\*.*?\\*/", "").replaceAll("(?m)//.*$", "");
+    }
 }

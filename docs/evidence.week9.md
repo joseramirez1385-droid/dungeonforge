@@ -36,19 +36,20 @@ wc -l src/main/java/dungeonforge/items/EnchantmentForge.java
 ```
 
 | | Count |
-|---|---|
-| Weapon/enchantment classes | |
-| Files containing the fire damage bonus | |
-| `instanceof` tests in `items/` | |
-| `return null` paths in `EnchantmentForge` | |
-| Lines in `EnchantmentForge` | |
+|---|-------|
+| Weapon/enchantment classes | 8     |
+| Files containing the fire damage bonus | 4     |
+| `instanceof` tests in `items/` | 34    |
+| `return null` paths in `EnchantmentForge` | 13    |
+| Lines in `EnchantmentForge` | 108   |
 
 **Open `FlamingFrostVampiricWeapon.java`. Which of its methods contain arithmetic that also
 appears, word for word, in another file?**
 
+getDamage() is the method and getValue()
 
 **You want a fourth enchantment, `keen`. Before you look anything up: how many new classes
-would this package need?** ______
+would this package need?** ___15___
 
 *(Write it down before reading on.)* For N enchantments the package needs 2^N − 1 classes.
 N = 3 is 7. N = 4 is 15. N = 5 is 31.
@@ -75,8 +76,18 @@ quit
 
 **(a) Paste the two `status` lines from before and after the first `enchant`:**
 
-```
+```Bash
+[Exploring | HP 80/80] > status
 
+  Delver  HP 80/80  ATK 15  DEF 3  Gold 0  XP 0  Carry 60.0kg  wielding Notched Shortsword [dmg 5] (2.5kg, 25g)
+[Exploring | HP 80/80] > enchant shortsword with flaming
+
+  The Notched Shortsword is now Flaming Notched Shortsword [dmg 9] (2.5kg, 85g)
+
+[Exploring | HP 80/80] > status
+
+  Delver  HP 80/80  ATK 15  DEF 3  Gold 0  XP 0  Carry 60.0kg  wielding Notched Shortsword [dmg 5] (2.5kg, 25g)
+  
 ```
 
 **Did your damage change? Explain in one sentence why not.**
@@ -84,8 +95,10 @@ quit
 
 **(b) Paste the refusal from the second `enchant ... with flaming`:**
 
-```
+```Bash
+[Exploring | HP 80/80] > enchant shortsword with flaming
 
+  That weapon cannot take another flaming enchantment.
 ```
 
 **Is there anything wrong with what you asked for? Yes or no — then say what the refusal was
@@ -94,8 +107,10 @@ really reporting.**
 
 **(c) Paste the response to `enchant ... with keen`:**
 
-```
+```Bash
+[Exploring | HP 80/80] > enchant shortsword with keen
 
+  No such enchantment: keen
 ```
 
 **(d) Open `EnchantmentForge.baseDamage()`. In one sentence: why does this method exist at all?
@@ -107,10 +122,10 @@ exist in any design. Which is which, and how do you know?
 
 | Defect | Design, or ordinary bug? | How you can tell |
 |---|---|---|
-| (a) stale hand | | |
-| (b) no double enchantment | | |
-| (c) no fourth enchantment | | |
-| (d) base-value recovery | | |
+| (a) stale hand |Design | |
+| (b) no double enchantment | Design| |
+| (c) no fourth enchantment |Design | |
+| (d) base-value recovery |bug | |
 
 ---
 
