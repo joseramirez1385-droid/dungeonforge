@@ -14,12 +14,7 @@ import dungeonforge.core.Player;
 import dungeonforge.events.AchievementSystem;
 import dungeonforge.events.EventBus;
 import dungeonforge.events.QuestTracker;
-import dungeonforge.items.BasicWeapon;
-import dungeonforge.items.EnchantmentRegistry;
-import dungeonforge.items.FlamingWeapon;
-import dungeonforge.items.FrostWeapon;
-import dungeonforge.items.VampiricWeapon;
-import dungeonforge.items.Weapon;
+import dungeonforge.items.*;
 import dungeonforge.states.HuntingState;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -187,5 +182,43 @@ class DecoratorTest {
         assertTrue(player.getHp() > before - 12,
                 "lifesteal must offset some of the counter-attack; got " + player.getHp());
         assertTrue(m.getHp() < 200);
+    }
+    // ================= US-7.3: the fourth enchantment =================
+
+    @Test
+    void keenMultipliesWhereTheOthersAdd() {
+        assertEquals(12, new KeenWeapon(sword()).getDamage(), "round(8 * 1.5)");
+    }
+
+    @Test
+    void theFourthEnchantmentNeededNoChangeToTheOtherThree() {
+        assertEquals(12, new FlamingWeapon(sword()).getDamage());
+        assertEquals(11, new FrostWeapon(sword()).getDamage());
+        assertEquals(4, EnchantmentRegistry.known().size());
+        assertTrue(EnchantmentRegistry.known().contains("keen"));
+    }
+
+    // ================= US-7.4:  =================
+
+    @Test
+    void orderChangesTheResultForMultiplyingDecorators() {
+        int keenThenFire = new FlamingWeapon(new KeenWeapon(sword())).getDamage();
+        int fireThenKeen = new KeenWeapon(new FlamingWeapon(sword())).getDamage();
+        assertEquals(16, keenThenFire);
+        assertEquals(18, fireThenKeen);
+        assertNotEquals(keenThenFire, fireThenKeen, "if these were equal, order would not matter "
+                + "and this test would be pointless");
+    }
+
+    @Test
+    void orderChangesHowMuchAVampiricWeaponDrinks() {
+        assertEquals(3, new VampiricWeapon(new FlamingWeapon(sword())).lifesteal());
+        assertEquals(2, new FlamingWeapon(new VampiricWeapon(sword())).lifesteal());
+    }
+
+    @Test
+    void twoVampiricLayersDrinkTwice() {
+        assertEquals(4, new VampiricWeapon(new VampiricWeapon(sword())).lifesteal(),
+                "the inner drinks 2 from base 8; " + "the outer drinks 2 more and adds the inner's");
     }
 }
