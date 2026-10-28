@@ -53,7 +53,9 @@ class DecoratorTest {
         history.push(c);
     }
 
-    /** Puts a hostile in the room THE WAY WALKING IN WOULD -- in the list, and mode synced. */
+    /**
+     * Puts a hostile in the room THE WAY WALKING IN WOULD -- in the list, and mode synced.
+     */
     private Monster spawnHostile(String name, int maxHp, int attack, int xpReward) {
         Monster m = new Monster(name, maxHp, attack, xpReward);
         m.setStrategy(new dungeonforge.behavior.AggressiveStrategy());
@@ -116,15 +118,19 @@ class DecoratorTest {
     @Test
     void thereIsNoCeilingOnDepth() {
         Weapon w = sword();
-        for (int i = 0; i < 12; i++) { w = new FrostWeapon(w); }
+        for (int i = 0; i < 12; i++) {
+            w = new FrostWeapon(w);
+        }
         assertEquals(8 + 12 * 3, w.getDamage());
     }
 
     @Test
     void theRegistryNeverReturnsNullForAKnownEnchantment() {
         Weapon w = sword();
-        for (String e : EnchantmentRegistry.known()) {for (int i = 0; i < 3; i++) {w = EnchantmentRegistry.apply(e, w);
-            assertNotNull(w, "wrapping " + e + " must always succeed, at any depth");
+        for (String e : EnchantmentRegistry.known()) {
+            for (int i = 0; i < 3; i++) {
+                w = EnchantmentRegistry.apply(e, w);
+                assertNotNull(w, "wrapping " + e + " must always succeed, at any depth");
             }
         }
     }
@@ -135,7 +141,9 @@ class DecoratorTest {
         assertThrows(IllegalArgumentException.class, () -> EnchantmentRegistry.apply("splendid", sword()));
     }
 
-    /** US-7.2 -- the stale-hand bug. Decorator did not fix this; the command did. */
+    /**
+     * US-7.2 -- the stale-hand bug. Decorator did not fix this; the command did.
+     */
     @Test
     void enchantingTheWeaponInYourHandChangesWhatYouHitWith() {
         player.addItem(sword());
@@ -221,4 +229,171 @@ class DecoratorTest {
         assertEquals(4, new VampiricWeapon(new VampiricWeapon(sword())).lifesteal(),
                 "the inner drinks 2 from base 8; " + "the outer drinks 2 more and adds the inner's");
     }
+
+    // ================= US-7.5 =================
+
+    @Test
+    void peelingAPlainWeaponGivesBackTheSameObject() {
+        Weapon plain = sword();
+
+        assertSame(
+                plain,
+                plain.peel(),
+                "a plain weapon peels to itself"
+        );
+    }
+
+    @Test
+    void peelingADecoratorGivesBackWhatWasUnderneath() {
+        Weapon bare = sword();
+        Weapon frosted = new FrostWeapon(bare);
+
+        assertSame(
+                bare,
+                frosted.peel(),
+                "one layer off must be the exact object it wrapped"
+        );
+    }
+
+    @Test
+    void disenchantRemovesOnlyTheOUTERMOSTLayer() {
+        player.addItem(new FlamingWeapon(new FrostWeapon(sword())));
+
+        assertEquals(
+                15,
+                ((Weapon) player.findItem("sword")).getDamage()
+        );
+
+        run("disenchant sword");
+
+        Weapon now = (Weapon) player.findItem("sword");
+
+        assertEquals(
+                "Frost Iron Sword",
+                now.getName(),
+                "Flaming went on last, so Flaming comes off first"
+        );
+
+        assertEquals(11, now.getDamage());
+    }
+
+    @Test
+    void thereIsNoWayToReachPastTheOuterLayer() {
+        player.addItem(new FlamingWeapon(new FrostWeapon(sword())));
+
+        run("disenchant sword");
+
+        assertEquals(
+                "Frost Iron Sword",
+                ((Weapon) player.findItem("sword")).getName()
+        );
+
+        run("disenchant sword");
+
+        assertEquals(
+                "Iron Sword",
+                ((Weapon) player.findItem("sword")).getName()
+        );
+
+        assertEquals(
+                8,
+                ((Weapon) player.findItem("sword")).getDamage()
+        );
+    }
+
+    @Test
+    void disenchantingTheWeaponInYourHandChangesWhatYouHitWith() {
+        player.addItem(new FlamingWeapon(sword()));
+        run("equip sword");
+
+        int armed = player.getAttackPower();
+
+        run("disenchant sword");
+
+        assertEquals(
+                armed - 4,
+                player.getAttackPower(),
+                "the equipped slot must follow the weapon back down"
+        );
+
+        assertEquals(
+                "Iron Sword",
+                player.getEquippedWeapon().getName()
+        );
+    }
+
+    @Test
+    void disenchantingAPlainWeaponIsRefusedAndChangesNothing() {
+        player.addItem(sword());
+        run("equip sword");
+
+        int armed = player.getAttackPower();
+
+        run("disenchant sword");
+
+        assertEquals(armed, player.getAttackPower());
+
+        assertEquals(
+                "Iron Sword",
+                player.getEquippedWeapon().getName()
+        );
+
+        assertEquals(
+                1,
+                player.getInventory().size(),
+                "a refusal must not duplicate the weapon"
+        );
+    }
+
+    @Test
+    void undoingADisenchantPutsTheEnchantmentBack() {
+        player.addItem(new FlamingWeapon(sword()));
+        run("equip sword");
+        run("disenchant sword");
+
+        assertEquals(
+                "Iron Sword",
+                player.getEquippedWeapon().getName()
+        );
+
+        assertTrue(history.undoLast());
+
+        assertEquals(
+                "Flaming Iron Sword",
+                player.getEquippedWeapon().getName(),
+                "the snapshot must restore the equipped weapon"
+        );
+
+        assertEquals(1, player.getInventory().size());
+    }
+
+    @Test
+    void disenchantCommandContainsNoTypeTestForDecorators()
+            throws Exception {
+
+        String code = codeOnly(
+                java.nio.file.Files.readString(
+                        java.nio.file.Path.of(
+                                "src/main/java/dungeonforge/commands/DisenchantCommand.java"
+                        )
+                )
+        );
+
+        assertFalse(
+                code.contains("instanceof WeaponDecorator"),
+                "peel() lets the command work without testing for decorators"
+        );
+
+        assertFalse(
+                code.contains("unwrap"),
+                "unwrap() is gone; peel() replaced it"
+        );
+    }
+
+    // Include this helper only once in DecoratorTest.
+    private static String codeOnly(String source) {
+        return source.replaceAll("(?s)/\\*.*?\\*/", "")
+                .replaceAll("(?m)//.*$", "");
+    }
+
 }
