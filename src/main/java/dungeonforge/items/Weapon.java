@@ -21,5 +21,6 @@ public interface Weapon extends Item {
      * Zero for an ordinary weapon. Combat calls this after every player strike.
      */
     default int lifesteal() { return 0; }
+    default Weapon peel() { return this; }
 
 }
