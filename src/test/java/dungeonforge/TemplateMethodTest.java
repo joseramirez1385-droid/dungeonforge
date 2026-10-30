@@ -112,4 +112,14 @@ class TemplateMethodTest {
         assertFalse(visible.contains("populateRooms"));
         assertFalse(visible.contains("createRooms"));
     }
+
+    @Test
+    void everyShapeKeepsAllTheRoomsItWasGiven() {
+        for (LevelGenerator shape : allShapes()) {
+            DungeonLevel level = shape.generate(1, theme, 8, false);
+            assertEquals(8, level.getRooms().size(), shape.shapeName() + " threw rooms away; "
+                    + "enforceReachability is a net, not a bin"
+            );
+        }
+    }
 }
