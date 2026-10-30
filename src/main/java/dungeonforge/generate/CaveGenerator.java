@@ -11,15 +11,22 @@ public class CaveGenerator extends LevelGenerator {
     @Override
     protected void connectRooms(DungeonLevel level) {
         List<Room> rooms = level.getRooms();
-        String[] dirs = {"north", "south"};
         for (int r = 1; r < rooms.size(); r++) {
-            int back = RandomSource.getInstance().nextInt(r);
-            String dir = dirs[RandomSource.getInstance().nextInt(dirs.length)];
-            String rev = dir.equals("north") ? "south" : "north";
+            attachToSomeEarlierRoom(rooms, r); }
+    }
 
-            // An existing exit in this direction is overwritten.
-            rooms.get(back).link(dir, rooms.get(r));
-            rooms.get(r).link(rev, rooms.get(back));
+    private void attachToSomeEarlierRoom(List<Room> rooms, int r) {
+        Room child = rooms.get(r);
+        for (int attempt = 0; attempt < r * DIRECTIONS.length * 2; attempt++) {
+            Room parent = rooms.get(RandomSource.getInstance().nextInt(r));
+            String dir = DIRECTIONS[RandomSource.getInstance().nextInt(DIRECTIONS.length)];
+            if (tryConnect(parent, dir, child)) return;
+        }
+
+        for (int i = 0; i < r; i++) {
+            for (String dir : DIRECTIONS) {
+                if (tryConnect(rooms.get(i), dir, child)) return;
+            }
         }
     }
 
