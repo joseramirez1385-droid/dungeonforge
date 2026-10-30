@@ -31,6 +31,20 @@ public class CaveGenerator extends LevelGenerator {
     }
 
     @Override
+    protected void addShortcuts(DungeonLevel level) {
+        List<Room> rooms = level.getRooms();
+        if (rooms.size() < 4) return;
+        int wanted = 1 + RandomSource.getInstance().nextInt(2);
+        int added = 0;
+        for (int attempt = 0; attempt < 60 && added < wanted; attempt++) {
+            Room a = rooms.get(RandomSource.getInstance().nextInt(rooms.size()));
+            Room b = rooms.get(RandomSource.getInstance().nextInt(rooms.size()));
+            String dir = DIRECTIONS[RandomSource.getInstance().nextInt(DIRECTIONS.length)];
+            if (tryConnect(a, dir, b)) { added++; }
+        }
+    }
+
+    @Override
     public String shapeName() {
         return "cave";
     }
