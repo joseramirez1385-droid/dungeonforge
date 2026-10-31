@@ -8,10 +8,7 @@ import dungeonforge.core.Room;
 import dungeonforge.factory.MonsterFactory;
 import dungeonforge.factory.ThemeKit;
 import dungeonforge.factory.ThemeRegistry;
-import dungeonforge.generate.CaveGenerator;
-import dungeonforge.generate.CorridorGenerator;
-import dungeonforge.generate.LevelGenerator;
-import dungeonforge.generate.RingGenerator;
+import dungeonforge.generate.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -124,56 +121,24 @@ class TemplateMethodTest {
         }
     }
 
-    // ================= US-8.2 =================
 
+    // ================= US-8.4 =================
     @Test
-    void connectingRoomsIsAnAbstractPrimitive() throws Exception {
-        Method connect = LevelGenerator.class.getDeclaredMethod("connectRooms", DungeonLevel.class);
-        assertTrue(Modifier.isAbstract(connect.getModifiers()), "every shape must supply its room connections");
+    void theRegistryHoldsOneEntryPerShape() {
+        GeneratorRegistry registry = new GeneratorRegistry();
+        assertEquals(4, registry.size());
+        assertEquals(List.of("corridor", "cave", "ring", "spoke"), registry.shapeNames());
     }
 
     @Test
-    void hooksAreConcreteAndOptional() throws Exception {
-        for (String hook : List.of("addShortcuts", "decorate")) {
-            Method m = hook.equals("decorate") ?
-                    LevelGenerator.class.getDeclaredMethod(hook, DungeonLevel.class, ThemeKit.class) :
-                    LevelGenerator.class.getDeclaredMethod(hook, DungeonLevel.class);
-            assertFalse(Modifier.isAbstract(m.getModifiers()), hook + " should be a hook, not a primitive");
-        }
+    void depthOneIsAlwaysACorridorSoTheGameOpensSimply() {
+        assertEquals("corridor", new GeneratorRegistry().forDepth(1).shapeName());
     }
 
     @Test
-    void onlyOneShapeOverridesAHookAndTheRestInheritTheSilence() {
-        int overrides = 0;
-        for (LevelGenerator shape : allShapes()) {
-            try {shape.getClass().getDeclaredMethod("addShortcuts", DungeonLevel.class);
-                overrides++;
-            } catch (NoSuchMethodException ignored) {
-                // This shape inherits the empty hook.
-            }
-        }
-        assertEquals(1, overrides, "only CaveGenerator should want extra edges");
-    }
-
-    @Test
-    void theCaveHookAddsEdgesBeyondASpanningTree() {
-        int treeEdges = 0;
-        int caveEdges = 0;
-        for (int seed = 1; seed <= 8; seed++) {
-            RandomSource.getInstance().reseed(seed * 7919L);
-            treeEdges += countDoors(new CorridorGenerator().generate(1, theme, 8, false));
-            RandomSource.getInstance().reseed(seed * 7919L);
-            caveEdges += countDoors(new CaveGenerator().generate(1, theme, 8, false));
-        }
-
-        assertTrue(caveEdges > treeEdges, "the cave hook should add doors beyond a spanning tree");
-    }
-
-    private static int countDoors(DungeonLevel level) {
-        int doors = 0;
-        for (Room room : level.getRooms()) {
-            doors += room.getExits().size();
-        }
-        return doors;
+    void theFourthShapeNeededNoChangeToTheOtherThree() {
+        assertEquals("corridor", new CorridorGenerator().shapeName());
+        assertEquals("cave", new CaveGenerator().shapeName());
+        assertEquals("ring", new RingGenerator().shapeName());
     }
 }

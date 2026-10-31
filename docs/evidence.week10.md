@@ -225,13 +225,20 @@ grep -c 'switch (d % ' src/main/java/dungeonforge/core/GameWorld.java
 
 **Paste `git diff --stat HEAD~1` for the commit that added the fourth shape:**
 
+```Bash$ 
+git diff --stat HEAD~1
+ docs/evidence.week10.md                            | 10 +++++--
+ .../dungeonforge/generate/GeneratorRegistry.java   |  1 +
+ .../java/dungeonforge/generate/SpokeGenerator.java | 31 ++++++++++++++++++++++
+ 3 files changed, 40 insertions(+), 2 deletions(-)
 ```
 
-```
+**New files:** ___1___  **Modified files:** ___1___  **Lines added:** __32____
 
-**New files:** ______  **Modified files:** ______  **Lines added:** ______
+**Is `GameWorld.java` in that diff?** ___No___ **Why not?**
 
-**Is `GameWorld.java` in that diff?** ______ **Why not?**
+Because we moved what varied and the invariant methods out into a template method.
+
 
 
 ### The other half of the receipt — what the old design would have cost
@@ -268,12 +275,18 @@ Your fourth shape produces levels with no orphaned rooms and an empty entrance.
 
 **Find the reachability check in `SpokeGenerator.java`.** Where is it? ______
 
+This is in the abstract base class.
+
 **Find the entrance guard in `SpokeGenerator.java`.** Where is it? ______
+
+Entrance guard is in the Abstract base class. We didnt have to implement it in Spoke
+because it was an inherited invariant.
 
 **In two or three sentences: explain how a class can satisfy an invariant it does not implement,
 and what had to be true of `generate()` for that to work.**
 
-
+It satisfies these invariants through inheriting the template method from the baseclass. That method had to be final
+and the invariant operations had to be private, so the subclass couldn't modify them, to guarantee the invariant.
 ---
 
 ## 6. AFTER — the honest accounting
