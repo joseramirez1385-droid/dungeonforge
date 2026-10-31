@@ -7,10 +7,7 @@ import dungeonforge.core.DungeonReport;
 import dungeonforge.factory.MonsterFactory;
 import dungeonforge.factory.ThemeKit;
 import dungeonforge.factory.ThemeRegistry;
-import dungeonforge.generate.CaveGenerator;
-import dungeonforge.generate.CorridorGenerator;
-import dungeonforge.generate.LevelGenerator;
-import dungeonforge.generate.RingGenerator;
+import dungeonforge.generate.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -121,5 +118,26 @@ class TemplateMethodTest {
                     + "enforceReachability is a net, not a bin"
             );
         }
+    }
+
+
+    // ================= US-8.4 =================
+    @Test
+    void theRegistryHoldsOneEntryPerShape() {
+        GeneratorRegistry registry = new GeneratorRegistry();
+        assertEquals(4, registry.size());
+        assertEquals(List.of("corridor", "cave", "ring", "spoke"), registry.shapeNames());
+    }
+
+    @Test
+    void depthOneIsAlwaysACorridorSoTheGameOpensSimply() {
+        assertEquals("corridor", new GeneratorRegistry().forDepth(1).shapeName());
+    }
+
+    @Test
+    void theFourthShapeNeededNoChangeToTheOtherThree() {
+        assertEquals("corridor", new CorridorGenerator().shapeName());
+        assertEquals("cave", new CaveGenerator().shapeName());
+        assertEquals("ring", new RingGenerator().shapeName());
     }
 }
