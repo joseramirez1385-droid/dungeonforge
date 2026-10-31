@@ -4,6 +4,7 @@ import dungeonforge.config.GameConfig;
 import dungeonforge.config.RandomSource;
 import dungeonforge.core.DungeonLevel;
 import dungeonforge.core.DungeonReport;
+import dungeonforge.core.Room;
 import dungeonforge.factory.MonsterFactory;
 import dungeonforge.factory.ThemeKit;
 import dungeonforge.factory.ThemeRegistry;
