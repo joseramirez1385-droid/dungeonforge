@@ -33,10 +33,7 @@ public abstract class AbstractCommand implements Command {
 
     @Override
     public final void execute() {
-        if (endsTurn()) {
-            before = TurnSnapshot.capture(ctx.getPlayer(), ctx.getCurrentRoom());
-        }
-
+        if (endsTurn()) { before = TurnSnapshot.capture(ctx.getPlayer(), ctx.getCurrentRoom()); }
         actuallyRan = doExecute();
 
         if (!actuallyRan) {

@@ -51,12 +51,12 @@ You have been using this pattern since Week 7. You did not know its name.
 **Step 2.** Fill this in from that file, not from the reading.
 
 | | In `AbstractCommand` |
-|---|---|
-| The template method | |
-| Is it final? | |
-| The primitive operation subclasses must implement | |
-| How many steps does the template fix the order of? | |
-| What happens to a subclass that forgets a step? | |
+|---|----------------------|
+| The template method |                      |
+| Is it final? | Yes                  |
+| The primitive operation subclasses must implement | doExecute()                 |
+| How many steps does the template fix the order of? |                      |
+| What happens to a subclass that forgets a step? |                      |
 
 **Step 3.** `AbstractCommand.execute()` snapshots, acts, and then lets the monsters respond — **in
 that order, always.**

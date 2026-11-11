@@ -19,14 +19,18 @@ public class EnchantmentRegistry {
     }
 
     public static boolean isKnown(String enchantment) {
-        return enchantment != null && SPELLS.containsKey(enchantment); }
+        return enchantment != null && SPELLS.containsKey(normalize(enchantment)); }
 
     public static List<String> known() { return new ArrayList<>(SPELLS.keySet()); }
 
     public static Weapon apply(String enchantment, Weapon weapon) {
-        UnaryOperator<Weapon> spell = SPELLS.get(enchantment);
+        UnaryOperator<Weapon> spell = SPELLS.get(normalize(enchantment));
         if (spell == null) { throw new IllegalArgumentException("no such enchantment: " + enchantment); }
         return spell.apply(weapon);
+    }
+
+    private static String normalize(String enchantment) {
+        return enchantment.toLowerCase().trim();
     }
 
 }
