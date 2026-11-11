@@ -14,7 +14,7 @@ file's header: a bare grep for `ctx.syncState()` finds the javadoc that *mention
 grep -rn 'MONSTER_SATE_CHANGED' src/main/java | wc -l
 ```
 
-**How many files share the misspelling?** ______
+**How many files share the misspelling?** ____3__
 
 **It works perfectly. In one sentence: what does it cost, and when?**
 
@@ -40,13 +40,13 @@ ls src/main/java/dungeonforge/events/*.java | xargs grep -l 'implements GameEven
 python3 scripts/codeonly.py src/main/java/dungeonforge/Main.java | grep -c 'bus.subscribe('
 ```
 
-**Listener classes in `events/`:** ______  **`bus.subscribe` calls in `Main`:** ______
+**Listener classes in `events/`:** ___4___  **`bus.subscribe` calls in `Main`:** ___4___
 
 **Those two numbers are equal and that is not reassuring. Why not?** *(Look at what the fourth
 subscription actually subscribes, and where that class lives.)*
 
 
-**Which listener class is never subscribed?** ______
+**Which listener class is never subscribed?** __DamageMeter____
 
 **Open it. What does it do, and when was it written?**
 
@@ -54,7 +54,8 @@ subscription actually subscribes, and where that class lives.)*
 **Now the sentence. Put both counts and the consequence in one sentence.** *(This is the most
 important sentence you will write this week. Two points.)*
 
-> ____________________________________________________________________
+> There are 4 listener classes in the events folder and 4 subscription calls in Main, 
+> but one of those calls subscribes ConsolePrinter, so DamageMeter is still left out.
 
 **Nobody broke it. In one sentence: what kind of mistake is this, if it is not a bug?**
 
@@ -71,7 +72,43 @@ mvn -q exec:java -Dexec.args="--script=demo.txt"
 **Paste the scripted output:**
 
 ```
+$ printf 'north\nlook\nnorth\nlook\n' > demo.txt
+mvn -q exec:java -Dexec.args="--script=demo.txt"
+=========================================
+        D U N G E O N F O R G E
+  A Head First Design Patterns project
+=========================================
+  version 0.12.0   seed 20260818
 
+  Type 'help' for what you can do. You are carrying an hourglass -- 'use hourglass' rewinds a turn.
+  [L1R0] Level 1: Crypt
+  "Burial niches line the walls. Most are empty. Most."
+  Exits: north
+
+[script] > north
+  You go north.
+  Ghoul is now hunting.
+
+[script] > look
+  [L1R1] Level 1: Crypt
+  "Damp stone. Something drips in the dark, patiently."
+  Hostile: Ghoul (18/18 HP, ATK 2, hunting)
+  Iron-bound Chest:
+    - Vial of Still Water [heals 21] (0.4kg, 25g)
+    - Vampiric Bone Shortsword [dmg 6] [drain 1] (2.0kg, 140g)
+    - Grave Shroud [def 3] (3.0kg, 43g)
+  Exits: south, north
+
+[script] > north
+  You go north.
+
+[script] > look
+  [L1R2] Level 1: Crypt
+  "Damp stone. Something drips in the dark, patiently."
+  Exits: south, north
+
+  Delver  HP 80/80  ATK 10  DEF 3  Gold 0  XP 0  Carry 60.0kg  (unarmed)
+  Actions this session: 4   |   undo stack depth: 2
 ```
 
 Now run `mvn -q exec:java` and type the same four commands by hand.
@@ -79,7 +116,59 @@ Now run `mvn -q exec:java` and type the same four commands by hand.
 **Paste that output:**
 
 ```
+$ mvn -q exec:java
+=========================================
+        D U N G E O N F O R G E
+  A Head First Design Patterns project
+=========================================
+  version 0.12.0   seed 20260818
 
+  Type 'help' for what you can do. You are carrying an hourglass -- 'use hourglass' rewinds a turn.
+  [L1R0] Level 1: Crypt
+  "Burial niches line the walls. Most are empty. Most."
+  Exits: north
+
+[Exploring | HP 80/80] > north
+
+  You go north.
+  Ghoul is now hunting.
+  Combat! 1 hostile(s). Try 'attack'.
+
+[Combat | HP 80/80] > look
+
+  [L1R1] Level 1: Crypt
+  "Damp stone. Something drips in the dark, patiently."
+  Hostile: Ghoul (18/18 HP, ATK 2, hunting)
+  Iron-bound Chest:
+    - Vial of Still Water [heals 21] (0.4kg, 25g)
+    - Vampiric Bone Shortsword [dmg 6] [drain 1] (2.0kg, 140g)
+    - Grave Shroud [def 3] (3.0kg, 43g)
+  Exits: south, north
+
+[Combat | HP 80/80] > north
+
+  You cannot do that in Combat mode. 
+    Available here: attack, look, use, equip, inventory, status, history, undo, help, quit
+
+[Combat | HP 80/80] > look
+
+  [L1R1] Level 1: Crypt
+  "Damp stone. Something drips in the dark, patiently."
+  Hostile: Ghoul (18/18 HP, ATK 2, hunting)
+  Iron-bound Chest:
+    - Vial of Still Water [heals 21] (0.4kg, 25g)
+    - Vampiric Bone Shortsword [dmg 6] [drain 1] (2.0kg, 140g)
+    - Grave Shroud [def 3] (3.0kg, 43g)
+  Exits: south, north
+
+[Combat | HP 80/80] > quit
+
+  You lay down your pack.
+  The room falls quiet.
+  === YOU leave the dungeon behind === 'quests' for your record, or 'quit'.
+
+  Delver  HP 80/80  ATK 10  DEF 3  Gold 0  XP 0  Carry 60.0kg  (unarmed)
+  Actions this session: 5   |   undo stack depth: 1
 ```
 
 **They differ. Name the file, the method and the line that is the difference.** ______
@@ -110,14 +199,14 @@ awk '/public static void main/{on=1} on{n++} on&&/^    }$/&&n>3{print n; exit}' 
 ```
 
 | | Before | After |
-|---|---|---|
-| `main()` lines | | |
-| `ctx.syncState()` in `Main` | | |
-| copies of the turn sequence | | |
-| `DamageMeter` mentioned outside its own file | | |
-| listener classes subscribed, of 4 | | |
-| monster blueprints available | | |
-| a script can walk past a live hostile | | |
+|---|--------|---|
+| `main()` lines | 191    | |
+| `ctx.syncState()` in `Main` | 3      | |
+| copies of the turn sequence | 3      | |
+| `DamageMeter` mentioned outside its own file | 0      | |
+| listener classes subscribed, of 4 | 3      | |
+| monster blueprints available | 79     | |
+| a script can walk past a live hostile | yes    | |
 
 *(Fill the After column at the end of the sprint. **Nothing in it may be a guess.**)*
 
