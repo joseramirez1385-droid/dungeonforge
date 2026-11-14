@@ -227,13 +227,38 @@ python3 scripts/codeonly.py src/main/java/dungeonforge/factory/MonsterFactory.ja
 **Paste all four.**
 
 ```
-
+$ git diff --stat HEAD~1          # on the us-9.1 commit
+diff src/main/java/dungeonforge/legacy/LegacyBestiary.java  <the file you were given>
+diff src/main/ja![img.png](img.png)va/dungeonforge/factory/MonsterFactory.java <the file you started with>
+python3 scripts/codeonly.py src/main/java/dungeonforge/factory/MonsterFactory.java \
+  | grep -ciE 'bestiary|csv|MOB_ID|HIT_DICE'
+ .gitignore                                         |   1 +
+ docs/adapter-facade-clinic.md                      | 145 +++++++
+ docs/evidence.week10.md                            |  14 +-
+ docs/evidence.week12.md                            | 312 ++++++++++++++
+ docs/sprint-09-plan.md                             | 449 +++++++++++++++++++++
+ docs/template-method-clinic.md                     |  12 +-
+ pom.xml                                            |   4 +-
+ scripts/codeonly.py                                |  21 +
+ src/main/java/dungeonforge/Main.java               |  29 +-
+ .../dungeonforge/commands/AbstractCommand.java     |   5 +-
+ src/main/java/dungeonforge/core/Combat.java        |   2 +-
+ src/main/java/dungeonforge/events/CombatLog.java   |   2 +-
+ src/main/java/dungeonforge/events/EventType.java   |   2 +-
+ .../java/dungeonforge/factory/MonsterSource.java   |   9 +
+ .../dungeonforge/items/EnchantmentRegistry.java    |   8 +-
+ .../java/dungeonforge/legacy/LegacyBestiary.java   |  89 ++++
+ .../dungeonforge/legacy/LegacyBestiaryAdapter.java | 108 +++++
+ src/main/resources/data/bestiary.csv               |  24 ++
+ src/test/java/dungeonforge/AdapterFacadeTest.java  | 205 ++++++++++
+ 19 files changed, 1416 insertions(+), 25 deletions(-)
 ```
 
 **Two of those commands are the deliverable. Which two, and why?**
 
+Both diff commands cause they don't produce no output at all.
 
-**`blueprintCount()` before:** ______ **after:** ______
+**`blueprintCount()` before:** ___19___ **after:** ___29___
 
 ### US-9.2, the Facade
 

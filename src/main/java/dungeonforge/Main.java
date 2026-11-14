@@ -15,8 +15,13 @@ import dungeonforge.events.EventType;
 import dungeonforge.events.GameEvent;
 import dungeonforge.events.GameEventListener;
 import dungeonforge.events.QuestTracker;
+import dungeonforge.factory.MonsterDef;
+import dungeonforge.factory.MonsterFactory;
+import dungeonforge.factory.MonsterSource;
 import dungeonforge.items.Hourglass;
 import dungeonforge.items.Potion;
+import dungeonforge.legacy.LegacyBestiary;
+import dungeonforge.legacy.LegacyBestiaryAdapter;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -110,6 +115,11 @@ public final class Main {
         // write. One line. You will MOVE that line into GameSession in US-9.2 -- that is
         // expected, and it is the point: a wiring step that lives in main() has to be
         // remembered by every caller, and there is about to be more than one caller.
+        MonsterFactory factory = world.getMonsterFactory();
+        MonsterSource source = new LegacyBestiaryAdapter(new LegacyBestiary("bestiary.csv"),
+                "bestiary.csv (0.4 export)");
+        for (MonsterDef def : source.definitions()) factory.register(def);
+
 
         CommandHistory history = new CommandHistory();
         GameContext ctx = new GameContext(world, player, bus, new Combat(bus), history);
