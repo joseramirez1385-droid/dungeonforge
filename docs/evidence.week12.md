@@ -269,7 +269,15 @@ git diff --stat HEAD~1          # on the us-9.2 commit
 **Paste it.**
 
 ```
-
+$ git diff --stat HEAD~1 
+ docs/evidence.week12.md                            |  29 ++-
+ src/main/java/dungeonforge/Main.java               | 115 +++------
+ src/main/java/dungeonforge/core/GameWorld.java     |  10 +-
+ .../java/dungeonforge/factory/MonsterSource.java   |   9 +
+ .../dungeonforge/legacy/LegacyBestiaryAdapter.java | 108 ++++++++
+ .../java/dungeonforge/session/GameSession.java     | 153 +++++++++++
+ src/test/java/dungeonforge/AdapterFacadeTest.java  | 280 +++++++++++++++++++++
+ 7 files changed, 615 insertions(+), 89 deletions(-)
 ```
 
 **One sentence each on what the two numbers mean.** *(They mean different things. One is about a
