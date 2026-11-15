@@ -199,14 +199,14 @@ awk '/public static void main/{on=1} on{n++} on&&/^    }$/&&n>3{print n; exit}' 
 ```
 
 | | Before | After |
-|---|--------|---|
-| `main()` lines | 191    | |
-| `ctx.syncState()` in `Main` | 3      | |
-| copies of the turn sequence | 3      | |
-| `DamageMeter` mentioned outside its own file | 0      | |
-| listener classes subscribed, of 4 | 3      | |
-| monster blueprints available | 79     | |
-| a script can walk past a live hostile | yes    | |
+|---|--------|-------|
+| `main()` lines | 191    | 127   |
+| `ctx.syncState()` in `Main` | 3      | 0     |
+| copies of the turn sequence | 3      | 0     |
+| `DamageMeter` mentioned outside its own file | 0      | 1     |
+| listener classes subscribed, of 4 | 3      | 4     |
+| monster blueprints available | 19     | 29    |
+| a script can walk past a live hostile | yes    | no    |
 
 *(Fill the After column at the end of the sprint. **Nothing in it may be a guess.**)*
 
@@ -288,45 +288,53 @@ format; one is about an order.)*
 
 ## 5. AFTER — what you did not have to change
 
-**List every file that learned a CSV exists.** ______
+**List every file that learned a CSV exists.** ___LegacyBestiary.java 
+ LegacyBestiaryAdapter.java
+GameSession.java___
 
-**Is `MonsterFactory` one of them?** ______
+**Is `MonsterFactory` one of them?** ___no___
 
 **`ThemeKit` picks which monsters appear in a room. How many lines of it did you change to make
-ten new monsters appear?** ______
+ten new monsters appear?** __0___
 
 **In two or three sentences: explain how a class can use a blueprint that arrived from a file
 format it has never heard of.**
 
-
+LegacyBestiaryAdapter converts the CSV records into MonsterDef objects and registers them with MonsterFactory. 
+ThemeKit uses those same MonsterDef blueprints, so it does not need to know about CSV files or how the data was originally stored.
 ---
 
 ## 6. AFTER — the honest accounting
 
 ### The Adapter's honest half
 
-**`bestiary.csv` has no xp column. Which of the three options did you take?** ______
+**`bestiary.csv` has no xp column. Which of the three options did you take?** _I derived an XP value from HP and attack
+and documented that decision.
 
-**Where in your code does a reader find out that the number is derived?** ______
+**Where in your code does a reader find out that the number is derived?** ___In LegacyBestiaryAdapter.experienceFor(),
+which adds a note that XP was derived because the export has no XP column. Those notes are available through translationNotes().___
 
 **One sentence: what would have gone wrong if you had silently defaulted it to 5?**
-
+Someone reading the blueprint could mistake 5 for an actual value from the CSV instead of a decision I made.
 
 **`SAPPER` has no counterpart. What did you do, and what happens when the eleventh unknown AI
 name arrives next semester?**
-
+I mapped SAPPER to the aggressive strategy and recorded a translation note. Any future unknown AI name uses that
+same fallback and produces a note so the unsupported value is visible.
 
 ### The Facade's honest half
 
 **Complete this honestly:**
 
 > `GameSession` now knows about eight collaborators and the order they go together in, which
-> means the coupling ______________________________________________
+> means the coupling ______GameSession now knows about eight collaborators and the order they go together in, which
+> means the coupling moved from Main into GameSession instead of disappearing.__
 
 **Name one thing that got HARDER because `Main` no longer knows those eight classes.** *(There
 is a real answer. Think about what a test needs.)*
 
-
+Setting up an isolated test got harder because GameSession.start() builds the whole session, even when a test 
+only needs a player and an event bus.
 ---
 
 ## 7. Retro line
@@ -336,10 +344,11 @@ Four sentences, and the two costs are not the same cost.
 
 | Pattern | Gave | Took |
 |---|---|---|
-| Adapter | | |
-| Facade | | |
+| Adapter | Adapter let me use the old bestiary without changing MonsterFactory.| I had to decide how to handle missing XP and unsupported AI values.|
+| Facade |Facade gave me one place to assemble the game and run each turn. |Setting up smaller tests became harder because start() builds the entire session. |
 
 **And the one-sentence distinction, in your own words, having now written both:** Adapter and
 Facade are both "a class in front of other classes." What made them different in practice?
 
-
+Adapter translated the old bestiary into an interface the game could use, while Facade brought the game’s setup and 
+turn sequence together behind one entry point.

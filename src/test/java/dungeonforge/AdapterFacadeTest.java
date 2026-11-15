@@ -180,28 +180,6 @@ public class AdapterFacadeTest {
         }
     }
 
-    @Test
-    void anotherSourceNeedsNoChangeAnywhereElse() {
-        MonsterSource invented = new MonsterSource() {
-
-            @Override
-            public String sourceName() {
-                return "invented";
-            }
-
-            @Override
-            public List<MonsterDef> definitions() {
-                List<MonsterDef> out = new ArrayList<>();
-                out.add(new MonsterDef("paper_golem", "Paper Golem", 12, 3, 8, "forge"));
-                return out;
-            }
-        };
-        MonsterFactory factory = new MonsterFactory();
-        for (MonsterDef d : invented.definitions()) factory.register(d);
-        assertTrue(factory.has("paper_golem"));
-        assertTrue(factory.idsForTheme("forge").contains("paper_golem"));
-    }
-
     // ===================== helper =====================
 
     private static String codeOnly(String source) {
@@ -307,6 +285,58 @@ public class AdapterFacadeTest {
         }
         return n;
     }
+
+    // ===================== US-9.3 : the replay receipt =====================
+
+    @Test
+    void anotherSourceNeedsNoChangeAnywhereElse() {
+        // A second source, in a format nobody has written a reader for, arriving through the
+        // same door. This is the whole claim of US-9.1, as a test rather than a sentence.
+        MonsterSource invented = new MonsterSource() {
+            @Override
+            public String sourceName() {return "invented";}
+            @Override
+            public List<MonsterDef> definitions() {
+                List<MonsterDef> out = new ArrayList<>();
+                out.add(new MonsterDef("paper_golem", "Paper Golem", 12, 3, 8, "forge"));
+                return out;
+            }
+        };
+        MonsterFactory factory = new MonsterFactory();
+        for (MonsterDef d : invented.definitions()) {factory.register(d);}
+        assertTrue(factory.has("paper_golem"));
+        assertTrue(factory.idsForTheme("forge").contains("paper_golem"));
+
+    }
+
+    @Test
+    void theSameInputThroughTwoSessionsProducesIdenticalTranscripts() {
+        List<String> input = List.of("look", "north", "status", "attack", "attack", "look", "status");
+
+        RandomSource.resetForTests();
+        GameSession a = GameSession.start("Delver");
+        for (String line : input) a.runLine(line);
+
+        RandomSource.resetForTests();
+        GameSession b = GameSession.start("Delver");
+        for (String line : input) b.runLine(line);
+
+        assertEquals(a.transcript(), b.transcript(),
+                "Week 7 promised that a recorded session reproduces exactly. Until the turn "
+                        + "sequence existed in one place, that depended on which loop replayed it.");
+        assertFalse(a.transcript().isEmpty(), "a transcript of nothing proves nothing");
+    }
+
+    @Test
+    void theDiagnosticWorldAndThePlayWorldAgree() {
+        RandomSource.resetForTests();
+        int reportMonsters = GameSession.buildWorldOnly("Delver").totalMonsters();
+        RandomSource.resetForTests();
+        int playMonsters = GameSession.start("Delver").getWorld().totalMonsters();
+        assertEquals(reportMonsters, playMonsters, "--report must describe the dungeon you actually play in");
+    }
+
+
 }
 
 
