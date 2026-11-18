@@ -71,7 +71,6 @@ public class GameWorld {
 
         for (int d = 1; d <= dungeonDepth; d++) {
             ThemeKit theme = themes.forDepth(d);
-            DungeonLevel level;
             LevelGenerator shape = generators.forDepth(d);
             levels.add( shape.generate(d, theme, roomsPerLevel, d == dungeonDepth));
         }
