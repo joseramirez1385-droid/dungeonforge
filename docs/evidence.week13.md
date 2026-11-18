@@ -37,12 +37,25 @@ done
 
 **List them:** ______
 
-**How many?** ______
+```bash
+src/main/java/dungeonforge/commands/TakeCommand.java
+src/main/java/dungeonforge/commands/TurnSnapshot.java
+src/main/java/dungeonforge/commands/CommandParser.java
+src/main/java/dungeonforge/factory/RoomPopulator.java
+src/main/java/dungeonforge/core/GameWorld.java
+src/main/java/dungeonforge/core/Room.java
+```
+
+**How many?** ___6___
 
 **Now the sentence. Name the count and say what it is a count OF.** *(Two points. "Six files use
 getChest" is not it — six files know *something*, and naming that thing is the answer.)*
 
-> ____________________________________________________________________
+```
+This counts the files that know a room stores loot in two separate places:
+the floor collection and the chest's contents.
+
+```
 
 **And one more count:**
 
@@ -50,7 +63,7 @@ getChest" is not it — six files know *something*, and naming that thing is the
 grep -rln "carriedWeight\|totalWeight" src/main/java/
 ```
 
-**Result:** ______
+**Result:** ___60kg___
 
 **Every `Item` has declared `getWeight()` since Week 1. In one sentence, what does that result
 mean about the number on your status line?**
@@ -65,10 +78,23 @@ Open `commands/TakeCommand.java`. Put `takeFromFloor()` and `takeFromChest()` si
 **Paste both:**
 
 ```java
+private Item takeFromFloor() {
+        for (Item i : room().getFloorItems()) {
+            if (matches(i)) { room().getFloorItems().remove(i); return i; }
+        }
+        return null;
+    }
 
+    private Item takeFromChest() {
+        if (!room().hasChest()) return null;
+        for (Item i : room().getChest().getContents()) {
+            if (matches(i)) { room().getChest().getContents().remove(i); return i; }
+        }
+        return null;
+    }
 ```
 
-**Ignoring the collection each one walks, how many lines actually differ?** ______
+**Ignoring the collection each one walks, how many lines actually differ?** ____2__
 
 **Now play the game.** `mvn -q exec:java`, then: go north, kill whatever is there, `look`,
 `take <the chest's name>`.
@@ -76,14 +102,33 @@ Open `commands/TakeCommand.java`. Put `takeFromFloor()` and `takeFromChest()` si
 **Paste those four lines of output:**
 
 ```
+[Exploring | HP 75/80] > look
 
+  [L1R1] Level 1: Crypt
+  "Damp stone. Something drips in the dark, patiently."
+  Iron-bound Chest:
+    - Vial of Still Water [heals 21] (0.4kg, 25g)
+    - Vampiric Bone Shortsword [dmg 6] [drain 1] (2.0kg, 140g)
+    - Grave Shroud [def 3] (3.0kg, 43g)
+  Exits: south, north
+
+[Exploring | HP 75/80] > take Iron-bound
+
+  There is nothing like that here.
+
+[Exploring | HP 75/80] > 
 ```
 
 **The game listed a chest, let you take something out of it, and then said it does not exist.
 Which of those three statements is false?**
 
+```
+That the chesy doesn't exist is false. It clearly exists with look.
 
-**Open `items/Chest.java` and read the comment at the top. When was it written?** ______
+```
+
+
+**Open `items/Chest.java` and read the comment at the top. When was it written?** ___week 4___
 
 ---
 
@@ -96,15 +141,15 @@ $C src/main/java/dungeonforge/commands/TakeCommand.java | grep -cE 'private Item
 $C src/main/java/dungeonforge/items/Chest.java | grep -c 'implements Item'
 ```
 
-| | Before | After |
-|---|---|---|
-| files that know a room has two containers | | |
-| collections a `Room` keeps items in | | |
-| search methods in `TakeCommand` | | |
-| `Chest` is an `Item` (yes/no) | | |
-| files that sum item weight | | |
-| `take <chest>` works (yes/no) | | |
-| `totalLoot()` after dropping two items | | |
+| | Before    | After |
+|---|-----------|---|
+| files that know a room has two containers | 6         | |
+| collections a `Room` keeps items in | 2         | |
+| search methods in `TakeCommand` | 2         | |
+| `Chest` is an `Item` (yes/no) | no        | |
+| files that sum item weight | 0         | |
+| `take <chest>` works (yes/no) | no        | |
+| `totalLoot()` after dropping two items | unchanged | |
 
 *(After column at the end of the sprint. **Nothing in it may be a guess.**)*
 
