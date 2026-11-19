@@ -40,6 +40,15 @@ public class Room {
     public Map<String, Room> getExits()      { return exits; }
     public Room getExit(String direction)    { return exits.get(direction.toLowerCase()); }
     public void link(String direction, Room to) { exits.put(direction.toLowerCase(), to); }
+
+    public java.util.Iterator<Item> contents() {
+        return new RoomContentsIterator(floorItems, chest == null ? null : chest.getContents());
+    }
+
+    public Iterable<Item> asContents() {
+        return this::contents;
+    }
+
     /** The first monster still standing, or null. */
     public Monster firstLivingIn() {
         for (Monster m : monsters) if (m.isAlive()) return m;
