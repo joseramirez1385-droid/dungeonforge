@@ -11,6 +11,7 @@ import dungeonforge.factory.ThemeRegistry;
 import dungeonforge.factory.TreasureRoomPopulator;
 import dungeonforge.generate.GeneratorRegistry;
 import dungeonforge.generate.LevelGenerator;
+import dungeonforge.items.Item;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -129,9 +130,10 @@ public class GameWorld {
         int n = 0;
         for (DungeonLevel l : levels) {
             for (Room r : l.getRooms()) {
-                if (r.hasChest()) n += r.getChest().getContents().size();
+                for (java.util.Iterator<Item> it = r.contents(); it.hasNext(); it.next()) n++;
             }
         }
         return n;
     }
+
 }
