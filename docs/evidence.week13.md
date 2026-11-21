@@ -159,11 +159,13 @@ $C src/main/java/dungeonforge/items/Chest.java | grep -c 'implements Item'
 
 Finish US-10.2, then play the game again and try `take <the chest's name>`.
 
-**What happened?** ______
+**What happened?** __There is nothing like that there.____
 
 **Complete this sentence:**
 
-> A chest is an `Item` now and I still cannot pick one up, because ______________________________
+> A chest is an `Item` now and I still cannot pick one up, because
+> Room still stores it in a separate chest field and the current iterator
+returns its contents without returning the chest itself.
 
 
 **Which story owns that, and which of its acceptance criteria?** ______
