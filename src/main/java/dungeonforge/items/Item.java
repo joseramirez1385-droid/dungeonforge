@@ -1,5 +1,8 @@
 package dungeonforge.items;
 
+import java.util.Collections;
+import java.util.Iterator;
+
 /**
  * WEEK 4 -- introduced so that a ThemeKit has loot to hand back.
  *
@@ -10,6 +13,14 @@ public interface Item {
     String getName();
     double getWeight();
     int getValue();
+
+    default Iterator<Item> children() {
+        return Collections.emptyIterator();
+    }
+
+    default boolean isContainer() {
+        return children().hasNext();
+    }
 
     default String describe() {
         return getName() + " (" + String.format("%.1f", getWeight()) + "kg, " + getValue() + "g)";
