@@ -98,6 +98,16 @@ public class Player extends Entity {
     public void addGold(int g)    { gold += g; }
     public void addXp(int x)      { xp += x; }
 
+    public double carriedWeight() {
+        double sum = 0;
+        for (Item item : inventory) sum += item.getWeight();
+        return sum;
+    }
+
+    public boolean canCarry(Item extra) {
+        return carriedWeight() + extra.getWeight() <= carryCapacity();
+    }
+
     /** Backpack capacity in kilograms, from config. */
     public double carryCapacity() {
         return GameConfig.getInstance().getDouble("carryCapacity");
@@ -111,7 +121,7 @@ public class Player extends Entity {
         return name + "  HP " + hp + "/" + maxHp
                 + "  ATK " + getAttackPower() + "  DEF " + defense
                 + "  Gold " + gold + "  XP " + xp
-                + "  Carry " + carryCapacity() + "kg"
+                + "  Carry " + String.format("%.1f", carriedWeight()) + "/" +  carryCapacity() + "kg"
                 + (equippedWeapon == null ? "  (unarmed)" : "  wielding " + equippedWeapon.describe());
     }
 }

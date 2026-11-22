@@ -16,6 +16,7 @@ import dungeonforge.core.Room;
 import dungeonforge.events.AchievementSystem;
 import dungeonforge.events.EventBus;
 import dungeonforge.events.QuestTracker;
+import dungeonforge.items.Chest;
 import dungeonforge.items.Hourglass;
 import dungeonforge.items.Potion;
 import org.junit.jupiter.api.BeforeEach;
@@ -193,11 +194,11 @@ class CommandTest {
 
     @Test
     void lootBecomesOneMacroHoldingSeveralCommands() {
-        Room room = findRoomWithLoot();
-        assumeRoom(room);
+        Room room = new Room("Macro Test");
+        // Loot targets top-level objects, so provide two explicit targets.
+        room.addItem(new dungeonforge.items.Treasure("First Coin", 0.1, 5));
+        room.addItem(new dungeonforge.items.Treasure("Second Coin", 0.1, 5));
         ctx.setCurrentRoom(room);
-        room.getMonsters().clear();
-
         Command loot = parser.parse("loot", ctx);
         assertInstanceOf(MacroCommand.class, loot);
         assertTrue(((MacroCommand) loot).size() >= 2);
@@ -210,7 +211,7 @@ class CommandTest {
         ctx.setCurrentRoom(room);
         room.getMonsters().clear();
 
-        int expected = room.getChest().getContents().size() + room.getFloorItems().size();
+        int expected = room.getFloorItems().size();
         run("loot");
         assertEquals(expected, player.getInventory().size());
 
@@ -290,7 +291,7 @@ class CommandTest {
     private Room findRoomWithLoot() {
         for (var level : ctx.getWorld().getLevels()) {
             for (Room r : level.getRooms()) {
-                if (r.getChest() != null && r.getChest().getContents().size() >= 2) return r;
+                for (Chest c : r.getChests()) if (c.directCount() >= 2) return r;
             }
         }
         return null;
