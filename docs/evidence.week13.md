@@ -141,15 +141,15 @@ $C src/main/java/dungeonforge/commands/TakeCommand.java | grep -cE 'private Item
 $C src/main/java/dungeonforge/items/Chest.java | grep -c 'implements Item'
 ```
 
-| | Before    | After |
-|---|-----------|---|
-| files that know a room has two containers | 6         | |
-| collections a `Room` keeps items in | 2         | |
-| search methods in `TakeCommand` | 2         | |
-| `Chest` is an `Item` (yes/no) | no        | |
-| files that sum item weight | 0         | |
-| `take <chest>` works (yes/no) | no        | |
-| `totalLoot()` after dropping two items | unchanged | |
+| | Before    | After                      |
+|---|-----------|----------------------------|
+| files that know a room has two containers | 6         | 0                          |
+| collections a `Room` keeps items in | 2         | 1                          |
+| search methods in `TakeCommand` | 2         | 0—one inline iterator loop |
+| `Chest` is an `Item` (yes/no) | no        | yes                        |
+| files that sum item weight | 0         | 2                          |
+| `take <chest>` works (yes/no) | no        | yes                        |
+| `totalLoot()` after dropping two items | unchanged | Increases by 2             |
 
 *(After column at the end of the sprint. **Nothing in it may be a guess.**)*
 
@@ -185,7 +185,11 @@ mvn test
 **Paste all three.**
 
 ```
+ls: cannot access 'src/main/java/dungeonforge/core/RoomContentsIterator.java': No such file or directory
 
+
+
+[INFO] Tests run: 173, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 **US-10.1's tests were written against a class that no longer exists, and they still pass. In one
@@ -194,17 +198,20 @@ sentence: what were they actually asserting?**
 
 ### The bug nobody reported
 
-**Read the version of `totalLoot()` you started the week with. What did it count?** ______
+**Read the version of `totalLoot()` you started the week with. What did it count?** __Chest contents only____
 
-**What did it NOT count?** ______
+**What did it NOT count?** Loose items on the floor
 
-**Why was that invisible?** ______
+**Why was that invisible?** zero loose items on the floor, and everything started inside the chest, it was never
+executed until a player dropped somthing.
 
 **Paste your before-and-after measurement** — `totalLoot()` with nothing on the floor, then after
 dropping two items.
 
-```
-
+```                             
+                                 Starter  Finished 
+totalLoot() at gereration          25        25
+after dropping 2 on thwe floor     25        25
 ```
 
 **One sentence, and be careful with it: did Iterator FIND this bug?** *(There is a wrong answer
@@ -215,23 +222,32 @@ that sounds good.)*
 
 ## 6. AFTER — what an iterator cannot do
 
-**After US-10.1, how many files still knew a room had two containers?** ______
+**After US-10.1, how many files still knew a room had two containers?** 4
 
 **Name them, and for each one say why `Room.contents()` could not serve it:**
 
 | File | Why not |
 |---|---|
-| | |
-| | |
-| | |
+| CommandParser.describeRoom() | Prints “On the floor: X” and “Iron-bound Chest: Y”—different sentences to a player. A walk that forgets structure cannot tell them apart. |
+| TurnSnapshot | Has to put things back. A flat walk records what was in the room, but not which collection each thing returns to. |
+| RoomPopulator | Has to put a chest somewhere, and that “somewhere” was a field of its own. |
+| Room itself | Is allowed to know how it stores things. That is its job. |
+
 
 **One of those three still reads the room's collections directly in your finished code. Which,
 and is that a failure to finish the refactor? Answer yes or no and defend it.**
 
+```
+CommandParser.describeRoom(), and no. It needs location information because its job is to report where items are.
+An iterator that hides structure cannot provide that distinction.
+```
 
 **For the other two: what fixed them — a better iterator, or something else?**
 
-
+```
+Composite fixed them by removing the second collection, so there was no longer a separate storage location to track. 
+The change was to the data structure, rather than the traversal.
+```
 ---
 
 ## 7. AFTER — the honest accounting
