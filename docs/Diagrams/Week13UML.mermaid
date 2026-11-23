@@ -1,0 +1,357 @@
+classDiagram
+    direction TB
+
+    namespace EntryPoint {
+        class Main
+        class GameSession {
+            +start(playerName, views) GameSession
+            +runLine(line)
+            +isRunning() boolean
+            +prompt() String
+        }
+    }
+
+    namespace Core {
+        class GameWorld
+        class DungeonLevel
+        class Room {
+            +contents() Iterator~Item~
+            +asContents() Iterable~Item~
+        }
+        class Entity {
+            <<abstract>>
+        }
+        class Player {
+            +equip(weapon) Weapon
+            +getEquippedWeapon() Weapon
+        }
+        class Monster {
+            +setStrategy(strategy)
+            +setState(next)
+        }
+        class Combat
+        class CompositeIterator {
+            +hasNext() boolean
+            +next() Item
+            +remove()
+        }
+    }
+
+    namespace Config {
+        class GameConfig {
+            <<Singleton>>
+            +getInstance() GameConfig$
+        }
+        class RandomSource {
+            <<Singleton>>
+            +getInstance() RandomSource$
+        }
+    }
+
+    namespace Commands {
+        class Command {
+            <<interface>>
+            +execute()
+            +undo()
+        }
+        class AbstractCommand {
+            <<abstract>>
+            +execute()
+            #doExecute() boolean*
+        }
+        class GameContext
+        class CommandFactory {
+            <<interface>>
+        }
+        class CommandParser {
+            +parse(input, ctx) Command
+        }
+        class CommandHistory {
+            +push(command)
+            +undoLast() boolean
+        }
+        class TurnSnapshot {
+            +capture(player, room) TurnSnapshot$
+            +restore()
+        }
+        class AttackCommand
+        class DisenchantCommand
+        class DropCommand
+        class EnchantCommand
+        class EquipCommand
+        class MacroCommand
+        class MoveCommand
+        class NoCommand
+        class SimpleCommand
+        class TakeCommand
+        class UseItemCommand
+    }
+
+    namespace Behavior {
+        class CombatStrategy {
+            <<interface>>
+            +chooseAction(self, target, room) Action
+        }
+        class Action
+        class AggressiveStrategy
+        class HealerStrategy
+        class RangedStrategy
+        class RedCoatStrategy
+        class SkittishStrategy
+    }
+
+    namespace States {
+        class GameState {
+            <<interface>>
+            +onEnter(ctx)
+            +onExit(ctx)
+        }
+        class ExploringState
+        class CombatState
+        class InventoryState
+        class GameOverState
+        class MonsterState {
+            <<interface>>
+            +next(self, player) MonsterState
+        }
+        class IdleState
+        class HuntingState
+        class FleeingState
+        class EnragedState
+        class DeadState
+    }
+
+    namespace Events {
+        class EventBus {
+            +subscribe(listener)
+            +unsubscribe(listener)
+            +publish(event)
+        }
+        class GameEventListener {
+            <<interface>>
+        }
+        class GameEvent
+        class EventType {
+            <<enumeration>>
+        }
+        class AchievementSystem
+        class CombatLog
+        class DamageMeter
+        class DangerMeter
+        class QuestTracker
+    }
+
+    namespace Factory {
+        class MonsterSource {
+            <<interface>>
+            +definitions() List~MonsterDef~
+            +sourceName() String
+        }
+        class MonsterDef
+        class MonsterFactory {
+            +register(def)
+            +create(id, depth) Monster
+        }
+        class ThemeRegistry
+        class ThemeKit {
+            <<interface>>
+        }
+        class CryptThemeKit
+        class ForgeThemeKit
+        class FrostThemeKit
+        class WinterfellThemeKit
+        class RoomPopulator {
+            <<abstract>>
+            +populate(room, depth)
+            #createEncounter(depth) List~Monster~*
+        }
+        class StandardRoomPopulator
+        class TreasureRoomPopulator
+        class BossRoomPopulator
+    }
+
+    namespace Generate {
+        class GeneratorRegistry
+        class LevelGenerator {
+            <<abstract>>
+            +generate(depth, theme, roomCount, isFinalLevel) DungeonLevel
+            #connectRooms(level)*
+            #addShortcuts(level)
+            #decorate(level, theme)
+        }
+        class CaveGenerator
+        class CorridorGenerator
+        class RingGenerator
+        class SpokeGenerator
+    }
+
+    namespace Items {
+        class Item {
+            <<interface>>
+            +getName() String
+            +children() Iterator~Item~
+            +isContainer() boolean
+        }
+        class Chest {
+            +add(item)
+            +remove(item) boolean
+            +children() Iterator~Item~
+        }
+        class Armor
+        class Hourglass
+        class Potion
+        class Treasure
+        class Weapon {
+            <<interface>>
+            +getDamage() int
+            +lifesteal() int
+            +peel() Weapon
+        }
+        class BasicWeapon
+        class WeaponDecorator {
+            <<abstract>>
+            #Weapon wrapped
+            +peel() Weapon
+        }
+        class FlamingWeapon
+        class FrostWeapon
+        class KeenWeapon
+        class VampiricWeapon
+        class EnchantmentRegistry {
+            +apply(enchantment, weapon) Weapon$
+        }
+    }
+
+    namespace Legacy {
+        class LegacyBestiary
+        class LegacyBestiaryAdapter
+    }
+
+%% Facade and Adapter
+    Main ..> GameSession : starts and runs
+    GameSession --> GameContext
+    GameSession --> CommandParser
+    GameSession --> CommandHistory
+    GameSession --> EventBus
+    GameSession ..> LegacyBestiaryAdapter : loads legacy monsters
+    GameSession ..> MonsterSource : imports definitions
+    GameSession ..> MonsterFactory : registers definitions
+    MonsterSource <|.. LegacyBestiaryAdapter
+    LegacyBestiaryAdapter --> LegacyBestiary : adapts
+    MonsterSource ..> MonsterDef : returns
+
+%% World and entities
+    GameContext --> GameWorld
+    GameContext --> Player
+    GameContext --> Room : current room
+    GameContext --> Combat
+    GameWorld *-- "1..*" DungeonLevel : levels
+    DungeonLevel *-- "0..*" Room : rooms
+    Room --> "0..*" Monster : monsters
+    Room --> "0..*" Item : floor items
+    Entity <|-- Player
+    Entity <|-- Monster
+    Player --> "0..*" Item : inventory
+    Player --> "0..1" Weapon : equipped weapon
+
+%% Singleton, Strategy, and State
+    Player ..> GameConfig : reads configuration
+    RangedStrategy ..> RandomSource : rolls
+    Monster --> CombatStrategy : current strategy
+    CombatStrategy <|.. AggressiveStrategy
+    CombatStrategy <|.. HealerStrategy
+    CombatStrategy <|.. RangedStrategy
+    CombatStrategy <|.. RedCoatStrategy
+    CombatStrategy <|.. SkittishStrategy
+    CombatStrategy ..> Action : returns
+    Combat ..> Action : carries out
+
+    GameContext --> GameState : current state
+    GameState <|.. ExploringState
+    GameState <|.. CombatState
+    GameState <|.. InventoryState
+    GameState <|.. GameOverState
+    Monster --> MonsterState : current state
+    MonsterState <|.. IdleState
+    MonsterState <|.. HuntingState
+    MonsterState <|.. FleeingState
+    MonsterState <|.. EnragedState
+    MonsterState <|.. DeadState
+
+%% Command and undo
+    Command <|.. AbstractCommand
+    Command <|.. MacroCommand
+    Command <|.. NoCommand
+    Command <|.. SimpleCommand
+    AbstractCommand <|-- AttackCommand
+    AbstractCommand <|-- DisenchantCommand
+    AbstractCommand <|-- DropCommand
+    AbstractCommand <|-- EnchantCommand
+    AbstractCommand <|-- EquipCommand
+    AbstractCommand <|-- MoveCommand
+    AbstractCommand <|-- TakeCommand
+    AbstractCommand <|-- UseItemCommand
+    AbstractCommand --> GameContext
+    AbstractCommand --> TurnSnapshot : saves before turn
+    MacroCommand --> "0..*" Command : child commands
+    CommandParser --> "0..*" CommandFactory : registers
+    CommandFactory ..> Command : creates
+    CommandHistory --> "0..*" Command : undo stack
+
+%% Observer
+    EventBus --> "0..*" GameEventListener : subscribers
+    EventBus ..> GameEvent : publishes
+    GameEvent --> EventType
+    Combat --> EventBus : publishes through
+    GameEventListener <|.. AchievementSystem
+    GameEventListener <|.. CombatLog
+    GameEventListener <|.. DamageMeter
+    GameEventListener <|.. DangerMeter
+    GameEventListener <|.. QuestTracker
+
+%% Factory and Template Method
+    GameWorld --> MonsterFactory
+    GameWorld --> ThemeRegistry
+    GameWorld --> GeneratorRegistry
+    MonsterFactory --> "0..*" MonsterDef : blueprints
+    MonsterFactory ..> Monster : creates
+    ThemeRegistry --> "0..*" ThemeKit : themes
+    ThemeKit <|.. CryptThemeKit
+    ThemeKit <|.. ForgeThemeKit
+    ThemeKit <|.. FrostThemeKit
+    ThemeKit <|.. WinterfellThemeKit
+    RoomPopulator --> ThemeKit
+    RoomPopulator <|-- StandardRoomPopulator
+    RoomPopulator <|-- TreasureRoomPopulator
+    RoomPopulator <|-- BossRoomPopulator
+    GeneratorRegistry --> "0..*" LevelGenerator : generators
+    LevelGenerator <|-- CaveGenerator
+    LevelGenerator <|-- CorridorGenerator
+    LevelGenerator <|-- RingGenerator
+    LevelGenerator <|-- SpokeGenerator
+    LevelGenerator ..> DungeonLevel : generates
+    LevelGenerator ..> RoomPopulator : populates rooms
+
+%% Inventory Composite and Iterator
+    Item <|.. Chest
+    Item <|.. Armor
+    Item <|.. Hourglass
+    Item <|.. Potion
+    Item <|.. Treasure
+    Item <|-- Weapon
+Chest o-- "0..*" Item : contains
+Room ..> CompositeIterator : creates
+CompositeIterator ..> Item : traverses
+CompositeIterator ..> Chest : descends into
+
+%% Weapon Decorator
+Weapon <|.. BasicWeapon
+Weapon <|.. WeaponDecorator
+WeaponDecorator --> Weapon : wraps
+WeaponDecorator <|-- FlamingWeapon
+WeaponDecorator <|-- FrostWeapon
+WeaponDecorator <|-- KeenWeapon
+WeaponDecorator <|-- VampiricWeapon
+EnchantCommand ..> EnchantmentRegistry : applies enchantment
+DisenchantCommand ..> Weapon : peels enchantment
+EnchantmentRegistry ..> Weapon : returns decorated weapon
